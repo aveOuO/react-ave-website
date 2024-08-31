@@ -1,4 +1,4 @@
-import { createElement, useEffect, useState } from 'react'
+import { createElement } from 'react'
 import { createRoot } from 'react-dom/client'
 
 export const usePromiseDialog = () => {

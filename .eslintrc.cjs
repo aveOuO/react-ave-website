@@ -30,6 +30,7 @@ module.exports = {
   rules: {
     'react/react-in-jsx-scope': 'off',
     '@typescript-eslint/no-explicit-any': ['off'],
+    'no-unused-vars': ['warning'],
     'prettier/prettier': ['error'], // %E6%89%93%E5%BC%80%E6%89%80%E6%9C%89%E7%9A%84prettier%E7%9A%84rule  },
   },
 }
