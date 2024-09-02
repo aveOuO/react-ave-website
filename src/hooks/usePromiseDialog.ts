@@ -24,8 +24,8 @@ export const usePromiseDialog = () => {
         },
         onOk: (data: any) => {
           resolve(data)
-        },
-      }),
+        }
+      })
     )
 
     p.finally(() => {
@@ -36,6 +36,6 @@ export const usePromiseDialog = () => {
     return p
   }
   return {
-    openDialog,
+    openDialog
   }
 }
