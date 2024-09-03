@@ -16,6 +16,6 @@ module.exports = {
   // 在对象字面量中是否添加空格，例如 { foo: bar }
   bracketSpacing: true,
   htmlWhitespaceSensityivity: 'ignore',
-  quoteProps: 'an-needed',
+  quoteProps: 'as-needed',
   trailingComma: 'none',
 }

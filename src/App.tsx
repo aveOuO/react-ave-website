@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
-import './App.css'
 import { Button, message } from 'antd'
 import { useMyDialog } from './components/MyDialog/hooks/useMyDialog'
+import './App.css'
+import ClickCounter from './components/ClickCounter/ClickCounter'
 
 const App: React.FC = () => {
-  const [count, setCount] = useState(0)
-
   const showDialog = useMyDialog()
 
   const justCick = async () => {
@@ -14,14 +13,14 @@ const App: React.FC = () => {
   }
 
   return (
-    <>
+    <div className='app-container'>
       <div>
-        <Button onClick={justCick}>求你点我</Button>
+        <Button onClick={justCick}>打开弹窗</Button>
       </div>
       <div className='card'>
-        <button onClick={() => setCount((count) => count + 1)}>点击次数 {count}</button>
+        <ClickCounter></ClickCounter>
       </div>
-    </>
+    </div>
   )
 }
 

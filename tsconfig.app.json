@@ -21,9 +21,30 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      // 解决项目中使用@作为路径别名，导致vscode无法跳转文件的问题
+      "@/*": [
+        "./src/*"
+      ]
+    },
   },
   "include": [
-    "src"
+    "types/**/*.ts",
+    "config/**/*.ts",
+    "config/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "vite.config.ts",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
   ]
 }
