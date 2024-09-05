@@ -5,14 +5,27 @@ import './index.css'
 
 const ClickCounter: FC = () => {
   const [count, setCount] = React.useState<Dayjs[]>([])
-  const [timer, setTimer] = React.useState<NodeJS.Timeout>()
   const [maxCount, setMaxCount] = React.useState<number>(0)
+
+  const [timer, setTimer] = React.useState<number>()
+
+  const startCount = () => {
+    const now = dayjs()
+    setCount((preCount) => {
+      const res = preCount.filter((item) => now.diff(item, 'second') < 1)
+      return res
+    })
+    setTimer(requestAnimationFrame(startCount))
+  }
 
   useEffect(() => {
     setMaxCount((preMaxCount) => {
       return count.length > preMaxCount ? count.length : preMaxCount
     })
-  }, [count])
+    if (!count.length && timer) {
+      cancelAnimationFrame(timer)
+    }
+  }, [count, timer])
 
   const onClick = () => {
     setCount((preCount) => {
@@ -21,21 +34,8 @@ const ClickCounter: FC = () => {
 
     // 第一次点击就开启定时器
     if (!count.length) {
-      clearInterval(timer)
-      const newTimer = setInterval(() => {
-        const now = dayjs()
-        setCount((preCount) => {
-          const res = preCount.filter((item) => now.diff(item, 'second') < 1)
-          if (!res.length) {
-            setTimer((currentTimer) => {
-              clearInterval(currentTimer)
-              return undefined
-            })
-          }
-          return res
-        })
-      }, 1000)
-      setTimer(newTimer)
+      if (timer) cancelAnimationFrame(timer)
+      setTimer(requestAnimationFrame(startCount))
     }
   }
 
