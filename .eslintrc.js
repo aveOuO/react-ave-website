@@ -22,6 +22,8 @@ module.exports = {
   ],
   plugins: ['react', 'prettier'],
   rules: {
+    'no-unused-expressions': 'off',
+    '@typescript-eslint/no-unused-expressions': 'off',
     // 强制使用单引号
     quotes: ['error', 'single'],
     'react/react-in-jsx-scope': 'off',
