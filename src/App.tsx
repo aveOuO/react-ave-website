@@ -1,26 +1,21 @@
-import React, { useState } from 'react'
-import { Button, message } from 'antd'
-import { useMyDialog } from './components/MyDialog/hooks/useMyDialog'
-import './App.css'
-import ClickCounter from './components/ClickCounter/ClickCounter'
+import React from 'react'
+import { Layout } from 'antd'
+// import ClickCounter from './components/ClickCounter/ClickCounter'
+import { SiteHeader } from './components/SiteHeader'
+import { Outlet } from 'react-router-dom'
+
+const { Header, Content } = Layout
 
 const App: React.FC = () => {
-  const showDialog = useMyDialog()
-
-  const justCick = async () => {
-    const clickTimes = await showDialog()
-    if (clickTimes) message.warning(`好你小子，直接点了我${clickTimes}次，马上到你家门口傲。`)
-  }
-
   return (
-    <div className='app-container'>
-      <div>
-        <Button onClick={justCick}>打开弹窗</Button>
-      </div>
-      <div className='card'>
-        <ClickCounter></ClickCounter>
-      </div>
-    </div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Header style={{ display: 'flex', alignItems: 'center' }}>
+        <SiteHeader></SiteHeader>
+      </Header>
+      <Content>
+        <Outlet />
+      </Content>
+    </Layout>
   )
 }
 
