@@ -2,15 +2,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import { ConfigProvider } from 'antd'
-
 import { RouterProvider } from 'react-router-dom'
 import router from './router/index.ts'
 
+import App from './App.tsx'
+
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ConfigProvider wave={{ disabled: true }}>
-      <RouterProvider router={router} />
-      {/* <App /> */}
-    </ConfigProvider>
-  </StrictMode>
+  // <StrictMode></StrictMode>
+  <ConfigProvider wave={{ disabled: true }}>
+    <RouterProvider router={router} />
+    {/* <App></App> */}
+  </ConfigProvider>
 )

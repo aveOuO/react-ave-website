@@ -1,9 +1,0 @@
-.app-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.card {
-  margin-top: 10px;
-}
