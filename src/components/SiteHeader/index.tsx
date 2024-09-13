@@ -13,7 +13,8 @@ const items: MenuItem[] = [
   {
     label: 'CPS测试',
     key: '/cps'
-  }
+  },
+  { label: '画布', key: '/canvas' }
 ]
 
 export const SiteHeader: React.FC = () => {
@@ -29,7 +30,14 @@ export const SiteHeader: React.FC = () => {
       <div style={{ height: '100%', display: 'flex', marginRight: '10px' }}>
         <img style={{ width: '160px', margin: 'auto 0' }} src={logoUrl} alt='泉塘小子logo' />
       </div>
-      <Menu theme='dark' mode='horizontal' selectedKeys={[current]} items={items} onClick={onClick} />
+      <Menu
+        theme='dark'
+        mode='horizontal'
+        selectedKeys={[current]}
+        style={{ userSelect: 'none' }}
+        items={items}
+        onClick={onClick}
+      />
     </>
   )
 }
