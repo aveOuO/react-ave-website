@@ -69,7 +69,7 @@ class Snake {
     if (this.direction === 'right') {
       this.position.x += this.size
       if (this.position.x >= width) {
-        this.position.y = 0
+        this.position.x = 0
       }
       return
     }
