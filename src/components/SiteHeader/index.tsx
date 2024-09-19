@@ -14,6 +14,7 @@ const items: MenuItem[] = [
     label: 'CPS测试',
     key: '/cps'
   },
+  { label: '组件测试', key: '/component-example' },
   { label: '画布', key: '/canvas' }
 ]
 
