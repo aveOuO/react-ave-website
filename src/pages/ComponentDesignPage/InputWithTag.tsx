@@ -34,7 +34,7 @@ const InputWithTag = () => {
 
   return (
     <div
-      className='ant-input css-dev-only-do-not-override-11lehqq ant-input-outlined tag-input'
+      className='ant-input css-11lehqq css-dev-only-do-not-override-11lehqq ant-input-outlined tag-input'
       style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', width: '300px', cursor: 'text' }}
       onClick={(e) => handleTagClick(e)}>
       {Array.from(tags).map((item) => (

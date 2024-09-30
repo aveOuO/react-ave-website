@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@editorjs/editorjs':
+        specifier: ^2.30.6
+        version: 2.30.6
       '@types/big.js':
         specifier: ^6.2.2
         version: 6.2.2
@@ -131,6 +134,9 @@ packages:
   '@ctrl/tinycolor@3.6.1':
     resolution: {integrity: sha512-SITSV6aIXsuVNV3f3O0f2n/cgyEDWoSqtZMYiAmcsYHydcKrOz3gUxB/iXd/Qf08+IZX4KpgNbvUdMBmWz+kcA==}
     engines: {node: '>=10'}
+
+  '@editorjs/editorjs@2.30.6':
+    resolution: {integrity: sha512-6eQMc4Di3Hz9p4o+NGRgKaCeAF7eAk106m+bsDLc4eo94VGYO1M163OiGFdmanE+w503qTmXOzycWff5blEOAQ==}
 
   '@emotion/hash@0.8.0':
     resolution: {integrity: sha512-kBJtf7PH6aWwZ6fka3zQ0p6SBYzx4fl1LoZXE2RrnYST9Xljm7WfKJrU4g/Xr3Beg72MLrp1AWNUmuYJTL7Cow==}
@@ -1671,6 +1677,8 @@ snapshots:
       regenerator-runtime: 0.14.1
 
   '@ctrl/tinycolor@3.6.1': {}
+
+  '@editorjs/editorjs@2.30.6': {}
 
   '@emotion/hash@0.8.0': {}
 
