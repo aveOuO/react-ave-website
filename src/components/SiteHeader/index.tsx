@@ -15,7 +15,15 @@ const items: MenuItem[] = [
     key: '/cps'
   },
   { label: '组件测试', key: '/component-example' },
-  { label: '画布', key: '/canvas' }
+  {
+    label: '画布',
+    key: '/canvas',
+    children: [
+      { label: '贪吃蛇', key: '/canvas/snake' },
+      { label: '迷宫', key: '/canvas/maze' }
+    ]
+  }
+  // { label: '画布', key: '/canvas' }
 ]
 
 export const SiteHeader: React.FC = () => {

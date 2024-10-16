@@ -4,6 +4,7 @@ import DialogTestPage from '@/pages/DialogTestPage/DialogTestPage'
 import App from '@/App'
 import CanvasPage from '@/pages/CanvasPage/CanvasPage'
 import ComponentExample from '@/pages/ComponentDesignPage/ComponentExample'
+import { CanvasMaze } from '@/pages/CanvasPage/CanvasMaze'
 
 export const routes: RouteObject[] = [
   {
@@ -18,7 +19,13 @@ export const routes: RouteObject[] = [
         path: '/cps',
         Component: ClickCounter
       },
-      { path: '/canvas', Component: CanvasPage },
+      {
+        path: '/canvas',
+        children: [
+          { path: '/canvas/snake', Component: CanvasPage },
+          { path: '/canvas/maze', Component: CanvasMaze }
+        ]
+      },
       { path: '/component-example', Component: ComponentExample }
     ]
   }
