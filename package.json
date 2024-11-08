@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --mode dev",
+    "prod": "vite --mode prod",
     "build": "tsc -b && vite build --mode prod",
     "lint": "eslint .",
     "fix": "eslint src --fix",
@@ -12,6 +13,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.5.1",
     "@editorjs/editorjs": "^2.30.6",
     "@types/big.js": "^6.2.2",
     "@types/lodash-es": "^4.17.12",
@@ -32,6 +34,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react-swc": "^3.5.0",
+    "autoprefixer": "^10.4.20",
     "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -40,7 +43,9 @@
     "globals": "^15.9.0",
     "husky": "^9.1.5",
     "lint-staged": "^15.2.10",
+    "postcss": "^8.4.47",
     "prettier": "^3.3.3",
+    "tailwindcss": "^3.4.14",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
