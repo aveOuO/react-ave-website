@@ -17,6 +17,7 @@ export const MainPage = () => {
   const {
     token: { colorBgContainer, borderRadiusLG }
   } = theme.useToken()
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsed={collapsed}>

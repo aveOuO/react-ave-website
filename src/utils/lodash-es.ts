@@ -1,1 +1,3 @@
-export { default as lodashEs } from 'lodash-es'
+import lodashEs from 'lodash-es'
+
+export default lodashEs
