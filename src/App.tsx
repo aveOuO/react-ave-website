@@ -12,7 +12,7 @@ const App: React.FC = () => {
       <Header style={{ display: 'flex', alignItems: 'center' }}>
         <SiteHeader></SiteHeader>
       </Header>
-      <Content>
+      <Content style={{ position: 'relative' }}>
         <Outlet />
       </Content>
     </Layout>

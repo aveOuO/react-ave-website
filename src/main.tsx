@@ -4,6 +4,7 @@ import './index.css'
 import { ConfigProvider } from 'antd'
 import { RouterProvider } from 'react-router-dom'
 import router from './router/index.ts'
+import 'virtual:svg-icons-register'
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode></StrictMode>
