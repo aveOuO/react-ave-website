@@ -12,11 +12,12 @@ class ShootingStar {
   constructor(canvas: HTMLCanvasElement) {
     this.len = Math.random() * 80 + 30  // 保持流星长度
     this.speed = Math.random() * 10 + 5  // 保持流星速度
-    this.angle = Math.PI / 8  // 修改为 22.5 度角 (之前是 30 度)
+    this.angle = Math.PI / 12  // 保持 15 度角
     
-    // 修改起始位置，确保在更高的位置
-    this.x = Math.random() * (canvas.width * 0.3) // 从左侧 30% 区域开始
-    this.y = Math.random() * (canvas.height * 0.2) // 从顶部 20% 区域开始（之前是 30%）
+    const startOffset = 100
+    // 修改起始位置，统一从左上方外侧生成
+    this.x = -startOffset // 固定在画布左侧外
+    this.y = -startOffset + Math.random() * (canvas.height * 0.2) // 在画布顶部外的一定范围内随机
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -50,7 +51,7 @@ class ShootingStar {
   }
 
   isOutside(canvas: HTMLCanvasElement): boolean {
-    return this.y > canvas.height || this.x > canvas.width
+    return (this.y - this.len) > (canvas.height * 0.6) || (this.x - this.len) > canvas.width
   }
 }
 
