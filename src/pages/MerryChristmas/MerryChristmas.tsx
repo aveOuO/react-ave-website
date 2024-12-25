@@ -1,8 +1,65 @@
 import { useEffect, useRef } from 'react'
 import './index.scss'
 
+// 添加流星类
+class ShootingStar {
+  x: number
+  y: number
+  len: number
+  speed: number
+  angle: number
+
+  constructor(canvas: HTMLCanvasElement) {
+    this.len = Math.random() * 80 + 30  // 保持流星长度
+    this.speed = Math.random() * 10 + 5  // 保持流星速度
+    this.angle = Math.PI / 12  // 保持 15 度角
+    
+    const startOffset = 100
+    // 修改起始位置，统一从左上方外侧生成
+    this.x = -startOffset // 固定在画布左侧外
+    this.y = -startOffset + Math.random() * (canvas.height * 0.2) // 在画布顶部外的一定范围内随机
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.save()
+    ctx.beginPath()
+    
+    // 交换渐变的起点和终点
+    const gradient = ctx.createLinearGradient(
+      this.x + Math.cos(this.angle) * this.len,  // 从右下开始
+      this.y + Math.sin(this.angle) * this.len,
+      this.x,                                     // 到左上结束
+      this.y
+    )
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)')  // 右下明亮
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')    // 左上透明
+    
+    ctx.strokeStyle = gradient
+    ctx.lineWidth = 2
+    ctx.moveTo(this.x, this.y)
+    ctx.lineTo(
+      this.x + Math.cos(this.angle) * this.len,
+      this.y + Math.sin(this.angle) * this.len
+    )
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  move() {
+    this.x += Math.cos(this.angle) * this.speed
+    this.y += Math.sin(this.angle) * this.speed
+  }
+
+  isOutside(canvas: HTMLCanvasElement): boolean {
+    return (this.y - this.len) > (canvas.height * 0.6) || (this.x - this.len) > canvas.width
+  }
+}
+
 export const MerryChristmas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const backgroundCanvasRef = useRef<HTMLCanvasElement>(null)  // 新增：用于存储静态背景
+  const shootingStarsRef = useRef<ShootingStar[]>([])
+  const animationFrameRef = useRef<number>()
 
   const drawOrnament = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
     const colors = ['#ff0000', '#ffff00', '#ffd700', '#ff69b4', '#4169e1']
@@ -241,6 +298,49 @@ export const MerryChristmas = () => {
     ctx.shadowOffsetY = 0
   }
 
+  const initBackground = () => {
+    const canvas = canvasRef.current
+    const bgCanvas = backgroundCanvasRef.current
+    if (!canvas || !bgCanvas) return
+
+    // 设置背景 canvas 尺寸
+    bgCanvas.width = canvas.width
+    bgCanvas.height = canvas.height
+
+    const ctx = bgCanvas.getContext('2d')
+    if (!ctx) return
+
+    // 绘制静态背景和圣诞树
+    drawTree(ctx, bgCanvas.width / 2, bgCanvas.height - 80)
+  }
+
+  const animate = () => {
+    const canvas = canvasRef.current
+    const bgCanvas = backgroundCanvasRef.current
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !bgCanvas || !ctx) return
+
+    // 清空当前画布
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    
+    // 绘制背景
+    ctx.drawImage(bgCanvas, 0, 0)
+
+    // 更新和绘制流星
+    shootingStarsRef.current = shootingStarsRef.current.filter(star => !star.isOutside(canvas))
+    
+    if (Math.random() < 0.03) {
+      shootingStarsRef.current.push(new ShootingStar(canvas))
+    }
+
+    shootingStarsRef.current.forEach(star => {
+      star.move()
+      star.draw(ctx)
+    })
+
+    animationFrameRef.current = requestAnimationFrame(animate)
+  }
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -248,26 +348,25 @@ export const MerryChristmas = () => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // 清空画布
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    // 创建背景 canvas
+    backgroundCanvasRef.current = document.createElement('canvas')
+    
+    // 初始化背景
+    initBackground()
+    
+    // 开始动画
+    animate()
 
-    // 绘制背景
-    ctx.fillStyle = '#001529'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-    // 绘制圣诞树
-    drawTree(ctx, canvas.width / 2, canvas.height - 80)
-
-    // 添加文字
-    ctx.font = '30px Arial'
-    ctx.fillStyle = '#ffffff'
-    ctx.textAlign = 'center'
-    // ctx.fillText('Merry Christmas!', canvas.width / 2, 80)
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
   }, [])
 
   return (
     <div className='merry-christmas'>
-      <canvas ref={canvasRef} width={800} height={700} />
+      <canvas ref={canvasRef} width={1000} height={800} />
     </div>
   )
 }
