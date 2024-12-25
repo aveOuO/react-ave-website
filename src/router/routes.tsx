@@ -5,6 +5,7 @@ import App from '@/App'
 import CanvasPage from '@/pages/CanvasPage/CanvasPage'
 import ComponentExample from '@/pages/ComponentDesignPage/ComponentExample'
 import { CanvasMaze } from '@/pages/CanvasPage/CanvasMaze'
+import { MerryChristmas } from '@/pages/MerryChristmas/MerryChristmas'
 
 export const routes: RouteObject[] = [
   {
@@ -28,10 +29,10 @@ export const routes: RouteObject[] = [
                 { path: '/canvas/maze', Component: CanvasMaze }
               ]
             },
-            { path: '/component-example', Component: ComponentExample }
+            { path: '/component-example', Component: ComponentExample },
+            { path: '/merry-chris', Component: MerryChristmas }
           ]
-        : []),
-        
+        : [{ path: '/merry-chris', Component: MerryChristmas }])
     ]
   }
 ]
