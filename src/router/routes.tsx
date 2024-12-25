@@ -9,6 +9,10 @@ import { MerryChristmas } from '@/pages/MerryChristmas/MerryChristmas'
 
 export const routes: RouteObject[] = [
   {
+    path: '/merry-christmas',
+    element: <MerryChristmas />
+  },
+  {
     path: '/',
     element: <App />,
     children: [
@@ -29,10 +33,9 @@ export const routes: RouteObject[] = [
                 { path: '/canvas/maze', Component: CanvasMaze }
               ]
             },
-            { path: '/component-example', Component: ComponentExample },
-            { path: '/merry-chris', Component: MerryChristmas }
+            { path: '/component-example', Component: ComponentExample }
           ]
-        : [{ path: '/merry-chris', Component: MerryChristmas }])
+        : [])
     ]
   }
 ]
