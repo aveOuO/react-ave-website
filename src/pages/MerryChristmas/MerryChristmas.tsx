@@ -10,13 +10,13 @@ class ShootingStar {
   angle: number
 
   constructor(canvas: HTMLCanvasElement) {
-    this.len = Math.random() * 80 + 30  // 流星长度
-    this.speed = Math.random() * 10 + 5  // 流星速度
-    this.angle = Math.PI / 4  // 45度角落下
+    this.len = Math.random() * 80 + 30  // 保持流星长度
+    this.speed = Math.random() * 10 + 5  // 保持流星速度
+    this.angle = Math.PI / 8  // 修改为 22.5 度角 (之前是 30 度)
     
-    // 从画布顶部随机位置开始
-    this.x = Math.random() * canvas.width
-    this.y = -this.len
+    // 修改起始位置，确保在更高的位置
+    this.x = Math.random() * (canvas.width * 0.3) // 从左侧 30% 区域开始
+    this.y = Math.random() * (canvas.height * 0.2) // 从顶部 20% 区域开始（之前是 30%）
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -365,7 +365,7 @@ export const MerryChristmas = () => {
 
   return (
     <div className='merry-christmas'>
-      <canvas ref={canvasRef} width={800} height={700} />
+      <canvas ref={canvasRef} width={1000} height={800} />
     </div>
   )
 }
