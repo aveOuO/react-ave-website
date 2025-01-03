@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import { Button, Select, InputNumber, Space } from 'antd'
 import './maze.scss'
 
 interface Cell {
@@ -13,16 +14,19 @@ interface Position {
 
 export const CanvasMaze: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const cols = 50
-  const rows = 50
-  const cellSize = 15
+  const [gridSize, setGridSize] = useState(50)
+  const [speed, setSpeed] = useState(1)
+  const [cellSize, setCellSize] = useState(15)
+  const [isExploring, setIsExploring] = useState(false)
+  const [isFinished, setIsFinished] = useState(false)
+  const [mazeData, setMazeData] = useState<Cell[][]>([])
   const padding = 20 // 添加内边距用于显示箭头
 
   const generateMaze = () => {
-    const maze: Cell[][] = Array(rows)
+    const maze: Cell[][] = Array(gridSize)
       .fill(null)
       .map(() =>
-        Array(cols)
+        Array(gridSize)
           .fill(null)
           .map(() => ({
             visited: false,
@@ -36,7 +40,7 @@ export const CanvasMaze: React.FC = () => {
       maze[row][col].visited = true
 
       // 如果是出口格子（右下角），确保只有一个方向开放
-      if (row === rows - 1 && col === cols - 1) {
+      if (row === gridSize - 1 && col === gridSize - 1) {
         // 优先尝试从上方进入
         if (row > 0 && maze[row - 1][col].visited) {
           maze[row][col].walls[0] = false // 打开上墙
@@ -76,7 +80,7 @@ export const CanvasMaze: React.FC = () => {
         const newRow = row + dy
         const newCol = col + dx
 
-        if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols && !maze[newRow][newCol].visited) {
+        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize && !maze[newRow][newCol].visited) {
           if (dy === -1) {
             maze[row][col].walls[0] = false
             maze[newRow][newCol].walls[2] = false
@@ -101,7 +105,7 @@ export const CanvasMaze: React.FC = () => {
   }
 
   const drawMaze = (context: CanvasRenderingContext2D, maze: Cell[][]) => {
-    context.clearRect(0, 0, cols * cellSize + padding * 2, rows * cellSize + padding * 2)
+    context.clearRect(0, 0, gridSize * cellSize + padding * 2, gridSize * cellSize + padding * 2)
 
     // 移动整个迷宫的起始位置，为箭头留出空间
     context.translate(padding, padding)
@@ -110,8 +114,8 @@ export const CanvasMaze: React.FC = () => {
     context.strokeStyle = '#d0d0d0'
     context.lineWidth = 1
 
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
+    for (let row = 0; row < gridSize; row++) {
+      for (let col = 0; col < gridSize; col++) {
         const cell = maze[row][col]
         const x = col * cellSize
         const y = row * cellSize
@@ -145,7 +149,7 @@ export const CanvasMaze: React.FC = () => {
     else if (!entryCell.walls[1]) entryDirection = 'right'
 
     // 确定出口方向
-    const exitCell = maze[rows - 1][cols - 1]
+    const exitCell = maze[gridSize - 1][gridSize - 1]
     let exitDirection = ''
     if (!exitCell.walls[0]) exitDirection = 'up'
     else if (!exitCell.walls[3]) exitDirection = 'left'
@@ -182,8 +186,8 @@ export const CanvasMaze: React.FC = () => {
     context.strokeStyle = '#C62828'
     context.lineWidth = 2
 
-    const exitX = (cols - 1) * cellSize
-    const exitY = (rows - 1) * cellSize
+    const exitX = (gridSize - 1) * cellSize
+    const exitY = (gridSize - 1) * cellSize
 
     if (exitDirection === 'up') {
       // 向上的箭头
@@ -210,164 +214,245 @@ export const CanvasMaze: React.FC = () => {
     context.setTransform(1, 0, 0, 1, 0, 0)
   }
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+  const exploreMaze = async (context: CanvasRenderingContext2D, maze: Cell[][]) => {
+    const playerRadius = cellSize * 0.3
+    const stack: Position[] = []
+    const visited = new Set<string>()
+    const currentPos: Position = { row: 0, col: 0 }
 
-    const context = canvas.getContext('2d')
-    if (!context) return
+    const posToString = (pos: Position) => `${pos.row},${pos.col}`
 
-    const maze = generateMaze()
-    drawMaze(context, maze)
+    // 平滑移动动画，增加路径颜色参数
+    const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
+      const steps = 15;
+      const deltaX = (to.col - from.col) * cellSize / steps;
+      const deltaY = (to.row - from.row) * cellSize / steps;
 
-    const exploreMaze = async (context: CanvasRenderingContext2D, maze: Cell[][]) => {
-      const playerRadius = cellSize * 0.3
-      const stack: Position[] = []
-      const visited = new Set<string>()
-      const currentPos: Position = { row: 0, col: 0 }
+      for (let i = 0; i <= steps; i++) {
+        // 清除整个画布上的玩家
+        context.save();
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+        context.restore();
 
-      const posToString = (pos: Position) => `${pos.row},${pos.col}`
+        // 重绘迷宫和已探索的路径
+        drawMaze(context, maze);
+        drawExploredPaths();
 
-      // 平滑移动动画，增加路径颜色参数
-      const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
-        const steps = 15;
-        const deltaX = (to.col - from.col) * cellSize / steps;
-        const deltaY = (to.row - from.row) * cellSize / steps;
+        // 绘制当前移动中的路径
+        context.beginPath();
+        context.strokeStyle = pathColor;
+        context.lineWidth = 2;
+        context.moveTo(
+          padding + from.col * cellSize + cellSize/2,
+          padding + from.row * cellSize + cellSize/2
+        );
+        context.lineTo(
+          padding + from.col * cellSize + cellSize/2 + deltaX * i,
+          padding + from.row * cellSize + cellSize/2 + deltaY * i
+        );
+        context.stroke();
 
-        for (let i = 0; i <= steps; i++) {
-          // 清除整个画布上的玩家
-          context.save();
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
-          context.restore();
+        // 绘制当前位置的玩家
+        context.beginPath();
+        context.fillStyle = '#4CAF50';
+        context.arc(
+          padding + from.col * cellSize + cellSize/2 + deltaX * i,
+          padding + from.row * cellSize + cellSize/2 + deltaY * i,
+          playerRadius,
+          0,
+          Math.PI * 2
+        );
+        context.fill();
 
-          // 重绘迷宫和已探索的路径
-          drawMaze(context, maze);
-          drawExploredPaths();
-
-          // 绘制当前移动中的路径
-          context.beginPath();
-          context.strokeStyle = pathColor;
-          context.lineWidth = 2;
-          context.moveTo(
-            padding + from.col * cellSize + cellSize/2,
-            padding + from.row * cellSize + cellSize/2
-          );
-          context.lineTo(
-            padding + from.col * cellSize + cellSize/2 + deltaX * i,
-            padding + from.row * cellSize + cellSize/2 + deltaY * i
-          );
-          context.stroke();
-
-          // 绘制当前位置的玩家
-          context.beginPath();
-          context.fillStyle = '#4CAF50';
-          context.arc(
-            padding + from.col * cellSize + cellSize/2 + deltaX * i,
-            padding + from.row * cellSize + cellSize/2 + deltaY * i,
-            playerRadius,
-            0,
-            Math.PI * 2
-          );
-          context.fill();
-
-          await sleep(10);
-        }
-      };
-
-      // 存储已探索的路径
-      const exploredPaths: { from: Position; to: Position; color: string }[] = []
-
-      // 绘制所有已探索的路径
-      const drawExploredPaths = () => {
-        exploredPaths.forEach((path) => {
-          context.beginPath()
-          context.strokeStyle = path.color
-          context.lineWidth = 2
-          context.moveTo(
-            padding + path.from.col * cellSize + cellSize / 2,
-            padding + path.from.row * cellSize + cellSize / 2
-          )
-          context.lineTo(padding + path.to.col * cellSize + cellSize / 2, padding + path.to.row * cellSize + cellSize / 2)
-          context.stroke()
-        })
+        await sleep(10);
       }
+    };
 
-      const drawPath = (from: Position, to: Position, color: string) => {
-        exploredPaths.push({ from, to, color })
-        drawExploredPaths()
-      }
+    // 存储已探索的路径
+    const exploredPaths: { from: Position; to: Position; color: string }[] = []
 
-      const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-      // 修正获取有效移动方向的函数
-      const getValidMoves = (pos: Position): Position[] => {
-        const moves: Position[] = [];
-        const cell = maze[pos.row][pos.col];
-        
-        // 检查四个方向的墙壁
-        // 上：如果当前格子的上墙是开放的
-        if (!cell.walls[0] && pos.row > 0) {
-          moves.push({ row: pos.row-1, col: pos.col });
-        }
-        // 右：如果当前格子的右墙是开放的
-        if (!cell.walls[1] && pos.col < cols-1) {
-          moves.push({ row: pos.row, col: pos.col+1 });
-        }
-        // 下：如果当前格子的下墙是开放的
-        if (!cell.walls[2] && pos.row < rows-1) {
-          moves.push({ row: pos.row+1, col: pos.col });
-        }
-        // 左：如果当前格子的左墙是开放的
-        if (!cell.walls[3] && pos.col > 0) {
-          moves.push({ row: pos.row, col: pos.col-1 });
-        }
-        
-        // 过滤掉已访问的格子
-        return moves.filter(move => !visited.has(posToString(move)));
-      };
-
-      // DFS探索
-      const explore = async (pos: Position) => {
-        visited.add(posToString(pos));
-        stack.push(pos);
-        
-        if (pos.row === rows-1 && pos.col === cols-1) {
-          return true;
-        }
-
-        const validMoves = getValidMoves(pos);
-        
-        for (const nextPos of validMoves) {
-          // 前进时使用红色路径
-          await animateMovement(pos, nextPos, '#ff4444');
-          drawPath(pos, nextPos, '#ff4444');
-          
-          const found = await explore(nextPos);
-          if (found) return true;
-
-          // 返回时使用蓝色路径
-          await animateMovement(nextPos, pos, '#4444ff');
-          // 只有在完成返回动画后才绘制最终的蓝色路径
-          drawPath(pos, nextPos, '#4444ff');
-        }
-
-        stack.pop();
-        return false;
-      };
-
-      await explore(currentPos)
+    // 绘制所有已探索的路径
+    const drawExploredPaths = () => {
+      exploredPaths.forEach((path) => {
+        context.beginPath()
+        context.strokeStyle = path.color
+        context.lineWidth = 2
+        context.moveTo(
+          padding + path.from.col * cellSize + cellSize / 2,
+          padding + path.from.row * cellSize + cellSize / 2
+        )
+        context.lineTo(padding + path.to.col * cellSize + cellSize / 2, padding + path.to.row * cellSize + cellSize / 2)
+        context.stroke()
+      })
     }
 
-    // 开始探索动画
-    setTimeout(() => {
-      exploreMaze(context, maze)
-    }, 1000)
-  }, [])
+    const drawPath = (from: Position, to: Position, color: string) => {
+      exploredPaths.push({ from, to, color })
+      drawExploredPaths()
+    }
+
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, Math.max(5, ms / speed)));
+
+    // 修正获取有效移动方向的函数
+    const getValidMoves = (pos: Position): Position[] => {
+      const moves: Position[] = [];
+      const cell = maze[pos.row][pos.col];
+      
+      // 检查四个方向的墙壁
+      // 上：如果当前格子的上墙是开放的
+      if (!cell.walls[0] && pos.row > 0) {
+        moves.push({ row: pos.row-1, col: pos.col });
+      }
+      // 右：如果当前格子的右墙是开放的
+      if (!cell.walls[1] && pos.col < gridSize-1) {
+        moves.push({ row: pos.row, col: pos.col+1 });
+      }
+      // 下：如果当前格子的下墙是开放的
+      if (!cell.walls[2] && pos.row < gridSize-1) {
+        moves.push({ row: pos.row+1, col: pos.col });
+      }
+      // 左：如果当前格子的左墙是开放的
+      if (!cell.walls[3] && pos.col > 0) {
+        moves.push({ row: pos.row, col: pos.col-1 });
+      }
+      
+      // 过滤掉已访问的格子
+      return moves.filter(move => !visited.has(posToString(move)));
+    };
+
+    // DFS探索
+    const explore = async (pos: Position) => {
+      visited.add(posToString(pos));
+      stack.push(pos);
+      
+      if (pos.row === gridSize-1 && pos.col === gridSize-1) {
+        return true;
+      }
+
+      const validMoves = getValidMoves(pos);
+      
+      for (const nextPos of validMoves) {
+        // 前进时使用红色路径
+        await animateMovement(pos, nextPos, '#ff4444');
+        drawPath(pos, nextPos, '#ff4444');
+        
+        const found = await explore(nextPos);
+        if (found) return true;
+
+        // 返回时使用蓝色路径
+        await animateMovement(nextPos, pos, '#4444ff');
+        // 只有在完成返回动画后才绘制最终的蓝色路径
+        drawPath(pos, nextPos, '#4444ff');
+      }
+
+      stack.pop();
+      return false;
+    };
+
+    await explore(currentPos)
+  }
+
+  // 处理格子数量变化
+  const handleGridSizeChange = (value: number) => {
+    setGridSize(value);
+    setCellSize(Math.floor(750 / value));
+    setIsFinished(false);
+    setMazeData([]);
+  };
+
+  // 生成新迷宫
+  const handleGenerateMaze = () => {
+    const maze = generateMaze();
+    setMazeData(maze);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    drawMaze(context, maze);
+  };
+
+  // 开始探索
+  const handleStartExplore = async () => {
+    setIsExploring(true);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    await exploreMaze(context, mazeData);
+    setIsFinished(true);
+    setIsExploring(false);
+  };
+
+  // 重新开始
+  const handleRestart = () => {
+    setIsExploring(false);
+    setIsFinished(false);
+    setMazeData([]);
+  };
+
+  // 修改原有的 useEffect，只在组件挂载时执行一次
+  useEffect(() => {
+    handleGenerateMaze();
+  }, []);
 
   return (
-    <div className='canvas-maze'>
-      <canvas ref={canvasRef} width={cols * cellSize + padding * 2} height={rows * cellSize + padding * 2} />
+    <div className="canvas-maze-container">
+      <Space direction="horizontal" size="middle" style={{ marginBottom: 20 }}>
+        <Space>
+          <Select
+            value={gridSize}
+            onChange={handleGridSizeChange}
+            disabled={isExploring}
+            options={[
+              { value: 25, label: '25 x 25' },
+              { value: 50, label: '50 x 50' },
+              { value: 75, label: '75 x 75' },
+            ]}
+            style={{ width: 120 }}
+          />
+          <Button 
+            type="primary" 
+            onClick={handleGenerateMaze}
+            disabled={isExploring}
+          >
+            生成迷宫
+          </Button>
+        </Space>
+        
+        {mazeData.length > 0 && !isFinished && (
+          <Space>
+            <InputNumber
+              min={1}
+              max={10}
+              value={speed}
+              onChange={value => setSpeed(value || 1)}
+              disabled={isExploring}
+              style={{ width: 100 }}
+              placeholder="探索速度"
+            />
+            <Button 
+              type="primary" 
+              onClick={handleStartExplore}
+              disabled={isExploring}
+            >
+              开始探索
+            </Button>
+          </Space>
+        )}
+        
+        {isFinished && (
+          <Button type="primary" onClick={handleRestart}>
+            重新开始游戏
+          </Button>
+        )}
+      </Space>
+
+      <canvas
+        ref={canvasRef}
+        width={gridSize * cellSize + padding * 2}
+        height={gridSize * cellSize + padding * 2}
+      />
     </div>
   )
 }
