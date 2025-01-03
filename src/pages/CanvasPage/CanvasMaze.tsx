@@ -35,11 +35,13 @@ export const CanvasMaze: React.FC = () => {
       )
 
     const startCell: [number, number] = [0, 0]
+    const stack: [number, number][] = [startCell]
+    maze[startCell[0]][startCell[1]].visited = true
 
-    const dfs = (row: number, col: number) => {
-      maze[row][col].visited = true
+    while (stack.length > 0) {
+      const [row, col] = stack[stack.length - 1]
 
-      // 如果是出口格子（右下角），确保只有一个方向开放
+      // 如果是出口格子（右下角）
       if (row === gridSize - 1 && col === gridSize - 1) {
         // 优先尝试从上方进入
         if (row > 0 && maze[row - 1][col].visited) {
@@ -49,7 +51,8 @@ export const CanvasMaze: React.FC = () => {
           maze[row][col].walls[1] = true // 右
           maze[row][col].walls[2] = true // 下
           maze[row][col].walls[3] = true // 左
-          return
+          stack.pop()
+          continue
         }
         // 如果上方不行，则从左方进入
         if (col > 0 && maze[row][col - 1].visited) {
@@ -59,16 +62,16 @@ export const CanvasMaze: React.FC = () => {
           maze[row][col].walls[0] = true // 上
           maze[row][col].walls[1] = true // 右
           maze[row][col].walls[2] = true // 下
-          return
+          stack.pop()
+          continue
         }
-        return
       }
 
       const directions = [
-        [-1, 0],
-        [0, 1],
-        [1, 0],
-        [0, -1]
+        [-1, 0], // 上
+        [0, 1],  // 右
+        [1, 0],  // 下
+        [0, -1]  // 左
       ]
 
       const shuffledDirections = directions
@@ -76,11 +79,20 @@ export const CanvasMaze: React.FC = () => {
         .sort((a, b) => a.sort - b.sort)
         .map(({ value }) => value)
 
+      let hasUnvisitedNeighbor = false
+
       for (const [dy, dx] of shuffledDirections) {
         const newRow = row + dy
         const newCol = col + dx
 
-        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize && !maze[newRow][newCol].visited) {
+        if (
+          newRow >= 0 &&
+          newRow < gridSize &&
+          newCol >= 0 &&
+          newCol < gridSize &&
+          !maze[newRow][newCol].visited
+        ) {
+          // 打开相应的墙
           if (dy === -1) {
             maze[row][col].walls[0] = false
             maze[newRow][newCol].walls[2] = false
@@ -95,12 +107,18 @@ export const CanvasMaze: React.FC = () => {
             maze[newRow][newCol].walls[1] = false
           }
 
-          dfs(newRow, newCol)
+          maze[newRow][newCol].visited = true
+          stack.push([newRow, newCol])
+          hasUnvisitedNeighbor = true
+          break
         }
+      }
+
+      if (!hasUnvisitedNeighbor) {
+        stack.pop()
       }
     }
 
-    dfs(startCell[0], startCell[1])
     return maze
   }
 
@@ -222,9 +240,10 @@ export const CanvasMaze: React.FC = () => {
     const posToString = (pos: Position) => `${pos.row},${pos.col}`
 
     // 修改 sleep 函数以设置最小延迟时间
-    const sleep = (ms: number) => new Promise((resolve) => 
-      setTimeout(resolve, Math.max(10, ms / speed)) // 确保最小延迟为10ms
-    )
+    const sleep = (ms: number) =>
+      new Promise(
+        (resolve) => setTimeout(resolve, Math.max(10, ms / speed)) // 确保最小延迟为10ms
+      )
 
     // 修改动画函数
     const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
@@ -250,10 +269,7 @@ export const CanvasMaze: React.FC = () => {
         context.beginPath()
         context.strokeStyle = pathColor
         context.lineWidth = 2
-        context.moveTo(
-          padding + from.col * cellSize + cellSize / 2,
-          padding + from.row * cellSize + cellSize / 2
-        )
+        context.moveTo(padding + from.col * cellSize + cellSize / 2, padding + from.row * cellSize + cellSize / 2)
         context.lineTo(
           padding + from.col * cellSize + cellSize / 2 + deltaX * i,
           padding + from.row * cellSize + cellSize / 2 + deltaY * i
@@ -429,17 +445,14 @@ export const CanvasMaze: React.FC = () => {
     // 获取视口的宽度和高度
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
-    
+
     // 计算可用空间（考虑边距和控制面板的高度）
     const availableWidth = Math.min(viewportWidth - 40, 750) - padding * 2 // 左右边距20px
     const availableHeight = viewportHeight - 200 - padding * 2 // 预留控制面板空间
-    
+
     // 使用较小的值来确保完整显示
-    const maxCellSize = Math.min(
-      Math.floor(availableWidth / size),
-      Math.floor(availableHeight / size)
-    )
-    
+    const maxCellSize = Math.min(Math.floor(availableWidth / size), Math.floor(availableHeight / size))
+
     return Math.max(10, maxCellSize) // 确保最小单元格大小为10px
   }
 
@@ -448,7 +461,7 @@ export const CanvasMaze: React.FC = () => {
     const handleResize = () => {
       const newCellSize = calculateCellSize(gridSize)
       setCellSize(newCellSize)
-      
+
       // 如果迷宫已经存在，重新绘制
       if (mazeData.length > 0) {
         const canvas = canvasRef.current
@@ -461,7 +474,7 @@ export const CanvasMaze: React.FC = () => {
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [gridSize, mazeData])
+  }, [])
 
   // 修改原有的 useEffect，只在组件挂载时执行一次
   useEffect(() => {

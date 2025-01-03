@@ -6,13 +6,19 @@
   width: 100%;
   max-width: 750px;
   margin: 0 auto;
-  min-height: 100vh;
+  min-height: 100%;
   box-sizing: border-box;
+
+  // 添加移动端适配
+  @supports (-webkit-touch-callout: none) {
+    // iOS Safari 专属样式
+    height: -webkit-fill-available;
+  }
 
   canvas {
     max-width: 100%;
     height: auto;
-    margin: 10px 0;
+    margin: 0;
   }
 
   // 控制面板样式
