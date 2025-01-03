@@ -222,9 +222,10 @@ export const CanvasMaze: React.FC = () => {
     const posToString = (pos: Position) => `${pos.row},${pos.col}`
 
     // 修改 sleep 函数以设置最小延迟时间
-    const sleep = (ms: number) => new Promise((resolve) => 
-      setTimeout(resolve, Math.max(10, ms / speed)) // 确保最小延迟为10ms
-    )
+    const sleep = (ms: number) =>
+      new Promise(
+        (resolve) => setTimeout(resolve, Math.max(10, ms / speed)) // 确保最小延迟为10ms
+      )
 
     // 修改动画函数
     const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
@@ -250,10 +251,7 @@ export const CanvasMaze: React.FC = () => {
         context.beginPath()
         context.strokeStyle = pathColor
         context.lineWidth = 2
-        context.moveTo(
-          padding + from.col * cellSize + cellSize / 2,
-          padding + from.row * cellSize + cellSize / 2
-        )
+        context.moveTo(padding + from.col * cellSize + cellSize / 2, padding + from.row * cellSize + cellSize / 2)
         context.lineTo(
           padding + from.col * cellSize + cellSize / 2 + deltaX * i,
           padding + from.row * cellSize + cellSize / 2 + deltaY * i
@@ -429,17 +427,14 @@ export const CanvasMaze: React.FC = () => {
     // 获取视口的宽度和高度
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
-    
+
     // 计算可用空间（考虑边距和控制面板的高度）
     const availableWidth = Math.min(viewportWidth - 40, 750) - padding * 2 // 左右边距20px
     const availableHeight = viewportHeight - 200 - padding * 2 // 预留控制面板空间
-    
+
     // 使用较小的值来确保完整显示
-    const maxCellSize = Math.min(
-      Math.floor(availableWidth / size),
-      Math.floor(availableHeight / size)
-    )
-    
+    const maxCellSize = Math.min(Math.floor(availableWidth / size), Math.floor(availableHeight / size))
+
     return Math.max(10, maxCellSize) // 确保最小单元格大小为10px
   }
 
@@ -448,7 +443,7 @@ export const CanvasMaze: React.FC = () => {
     const handleResize = () => {
       const newCellSize = calculateCellSize(gridSize)
       setCellSize(newCellSize)
-      
+
       // 如果迷宫已经存在，重新绘制
       if (mazeData.length > 0) {
         const canvas = canvasRef.current
@@ -461,7 +456,7 @@ export const CanvasMaze: React.FC = () => {
 
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [gridSize, mazeData])
+  }, [])
 
   // 修改原有的 useEffect，只在组件挂载时执行一次
   useEffect(() => {
