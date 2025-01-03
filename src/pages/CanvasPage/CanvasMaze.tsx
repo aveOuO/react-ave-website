@@ -222,14 +222,17 @@ export const CanvasMaze: React.FC = () => {
 
     const posToString = (pos: Position) => `${pos.row},${pos.col}`
 
-    // 修改 sleep 函数以更好地响应速度变化
-    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, Math.max(1, ms / speed)))
+    // 修改 sleep 函数以设置最小延迟时间
+    const sleep = (ms: number) => new Promise((resolve) => 
+      setTimeout(resolve, Math.max(10, ms / speed)) // 确保最小延迟为10ms
+    )
 
-    // 修改动画函数以使用速度控制
+    // 修改动画函数
     const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
-      // 根据速度调整步数，速度越快步数越少
-      const baseSteps = 8
-      const steps = Math.max(5, Math.floor(baseSteps / speed))
+      // 根据速度调整步数，但保持最小步数
+      const baseSteps = 10
+      const steps = Math.max(3, Math.floor(baseSteps / Math.sqrt(speed))) // 使用平方根来平滑速度变化
+
       const deltaX = ((to.col - from.col) * cellSize) / steps
       const deltaY = ((to.row - from.row) * cellSize) / steps
 
@@ -248,7 +251,10 @@ export const CanvasMaze: React.FC = () => {
         context.beginPath()
         context.strokeStyle = pathColor
         context.lineWidth = 2
-        context.moveTo(padding + from.col * cellSize + cellSize / 2, padding + from.row * cellSize + cellSize / 2)
+        context.moveTo(
+          padding + from.col * cellSize + cellSize / 2,
+          padding + from.row * cellSize + cellSize / 2
+        )
         context.lineTo(
           padding + from.col * cellSize + cellSize / 2 + deltaX * i,
           padding + from.row * cellSize + cellSize / 2 + deltaY * i
@@ -261,14 +267,13 @@ export const CanvasMaze: React.FC = () => {
         context.arc(
           padding + from.col * cellSize + cellSize / 2 + deltaX * i,
           padding + from.row * cellSize + cellSize / 2 + deltaY * i,
-          playerRadius,
+          cellSize * 0.3,
           0,
           Math.PI * 2
         )
         context.fill()
 
-        // 根据速度调整每帧延迟
-        await sleep(5)
+        await sleep(5) // 每帧之间的最小延迟
       }
     }
 
