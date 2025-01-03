@@ -35,11 +35,13 @@ export const CanvasMaze: React.FC = () => {
       )
 
     const startCell: [number, number] = [0, 0]
+    const stack: [number, number][] = [startCell]
+    maze[startCell[0]][startCell[1]].visited = true
 
-    const dfs = (row: number, col: number) => {
-      maze[row][col].visited = true
+    while (stack.length > 0) {
+      const [row, col] = stack[stack.length - 1]
 
-      // 如果是出口格子（右下角），确保只有一个方向开放
+      // 如果是出口格子（右下角）
       if (row === gridSize - 1 && col === gridSize - 1) {
         // 优先尝试从上方进入
         if (row > 0 && maze[row - 1][col].visited) {
@@ -49,7 +51,8 @@ export const CanvasMaze: React.FC = () => {
           maze[row][col].walls[1] = true // 右
           maze[row][col].walls[2] = true // 下
           maze[row][col].walls[3] = true // 左
-          return
+          stack.pop()
+          continue
         }
         // 如果上方不行，则从左方进入
         if (col > 0 && maze[row][col - 1].visited) {
@@ -59,16 +62,16 @@ export const CanvasMaze: React.FC = () => {
           maze[row][col].walls[0] = true // 上
           maze[row][col].walls[1] = true // 右
           maze[row][col].walls[2] = true // 下
-          return
+          stack.pop()
+          continue
         }
-        return
       }
 
       const directions = [
-        [-1, 0],
-        [0, 1],
-        [1, 0],
-        [0, -1]
+        [-1, 0], // 上
+        [0, 1],  // 右
+        [1, 0],  // 下
+        [0, -1]  // 左
       ]
 
       const shuffledDirections = directions
@@ -76,11 +79,20 @@ export const CanvasMaze: React.FC = () => {
         .sort((a, b) => a.sort - b.sort)
         .map(({ value }) => value)
 
+      let hasUnvisitedNeighbor = false
+
       for (const [dy, dx] of shuffledDirections) {
         const newRow = row + dy
         const newCol = col + dx
 
-        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize && !maze[newRow][newCol].visited) {
+        if (
+          newRow >= 0 &&
+          newRow < gridSize &&
+          newCol >= 0 &&
+          newCol < gridSize &&
+          !maze[newRow][newCol].visited
+        ) {
+          // 打开相应的墙
           if (dy === -1) {
             maze[row][col].walls[0] = false
             maze[newRow][newCol].walls[2] = false
@@ -95,12 +107,18 @@ export const CanvasMaze: React.FC = () => {
             maze[newRow][newCol].walls[1] = false
           }
 
-          dfs(newRow, newCol)
+          maze[newRow][newCol].visited = true
+          stack.push([newRow, newCol])
+          hasUnvisitedNeighbor = true
+          break
         }
+      }
+
+      if (!hasUnvisitedNeighbor) {
+        stack.pop()
       }
     }
 
-    dfs(startCell[0], startCell[1])
     return maze
   }
 
