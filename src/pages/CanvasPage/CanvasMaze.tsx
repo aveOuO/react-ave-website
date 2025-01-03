@@ -295,56 +295,82 @@ export const CanvasMaze: React.FC = () => {
       drawExploredPaths()
     }
 
-    // 修正获取有效移动方向的函数
+    // 添加获取有效移动的函数
     const getValidMoves = (pos: Position): Position[] => {
       const moves: Position[] = []
-      const cell = maze[pos.row][pos.col]
+      const { row, col } = pos
 
-      // 检查四个方向的墙壁
-      // 上：如果当前格子的上墙是开放的
-      if (!cell.walls[0] && pos.row > 0) {
-        moves.push({ row: pos.row - 1, col: pos.col })
-      }
-      // 右：如果当前格子的右墙是开放的
-      if (!cell.walls[1] && pos.col < gridSize - 1) {
-        moves.push({ row: pos.row, col: pos.col + 1 })
-      }
-      // 下：如果当前格子的下墙是开放的
-      if (!cell.walls[2] && pos.row < gridSize - 1) {
-        moves.push({ row: pos.row + 1, col: pos.col })
-      }
-      // 左：如果当前格子的左墙是开放的
-      if (!cell.walls[3] && pos.col > 0) {
-        moves.push({ row: pos.row, col: pos.col - 1 })
-      }
+      // 检查四个方向 [上, 右, 下, 左]
+      if (!maze[row][col].walls[0] && row > 0) moves.push({ row: row - 1, col }) // 上
+      if (!maze[row][col].walls[1] && col < gridSize - 1) moves.push({ row, col: col + 1 }) // 右
+      if (!maze[row][col].walls[2] && row < gridSize - 1) moves.push({ row: row + 1, col }) // 下
+      if (!maze[row][col].walls[3] && col > 0) moves.push({ row, col: col - 1 }) // 左
 
-      // 过滤掉已访问的格子
-      return moves.filter((move) => !visited.has(posToString(move)))
+      return moves
     }
 
-    // DFS探索
+    // 新增：先找到到终点的路径
+    const findPathToEnd = (pos: Position, visitedPath = new Set<string>()): Position[] | null => {
+      if (pos.row === gridSize - 1 && pos.col === gridSize - 1) {
+        return [pos]
+      }
+
+      visitedPath.add(posToString(pos))
+      const validMoves = getValidMoves(pos).filter((move) => !visitedPath.has(posToString(move)))
+
+      for (const nextPos of validMoves) {
+        const path = findPathToEnd(nextPos, new Set(visitedPath))
+        if (path) {
+          return [pos, ...path]
+        }
+      }
+      return null
+    }
+
+    // 获取到终点的正确路径
+    const pathToEnd = findPathToEnd(currentPos) || []
+    const correctPathSet = new Set(pathToEnd.map(posToString))
+
+    // 修改 getValidMovesWithPriority 函数
+    const getValidMovesWithPriority = (pos: Position): Position[] => {
+      const moves = getValidMoves(pos).filter((move) => !visited.has(posToString(move)))
+      return moves.sort((a, b) => {
+        const aInCorrectPath = correctPathSet.has(posToString(a))
+        const bInCorrectPath = correctPathSet.has(posToString(b))
+        if (aInCorrectPath && !bInCorrectPath) return 1
+        if (!aInCorrectPath && bInCorrectPath) return -1
+        return Math.random() - 0.5 // 随机排序非正确路径的移动
+      })
+    }
+
     const explore = async (pos: Position) => {
+      if (visited.has(posToString(pos))) return false
+
+      // 检查是否到达终点
+      if (pos.row === gridSize - 1 && pos.col === gridSize - 1) {
+        visited.add(posToString(pos))
+        return true // 到达终点返回 true
+      }
+
       visited.add(posToString(pos))
       stack.push(pos)
 
-      if (pos.row === gridSize - 1 && pos.col === gridSize - 1) {
-        return true
-      }
-
-      const validMoves = getValidMoves(pos)
+      const validMoves = getValidMovesWithPriority(pos)
 
       for (const nextPos of validMoves) {
-        // 前进时使用红色路径
-        await animateMovement(pos, nextPos, '#ff4444')
-        drawPath(pos, nextPos, '#ff4444')
+        if (!visited.has(posToString(nextPos))) {
+          await animateMovement(pos, nextPos, '#ff4444')
+          drawPath(pos, nextPos, '#ff4444')
 
-        const found = await explore(nextPos)
-        if (found) return true
+          const reachedEnd = await explore(nextPos)
+          if (reachedEnd) return true // 如果到达终点，直接返回，不再回溯
 
-        // 返回时使用蓝色路径
-        await animateMovement(nextPos, pos, '#4444ff')
-        // 只有在完成返回动画后才绘制最终的蓝色路径
-        drawPath(pos, nextPos, '#4444ff')
+          // 只有在没到达终点的情况下才回溯
+          if (!reachedEnd) {
+            await animateMovement(nextPos, pos, '#4444ff')
+            drawPath(pos, nextPos, '#4444ff')
+          }
+        }
       }
 
       stack.pop()
@@ -390,6 +416,8 @@ export const CanvasMaze: React.FC = () => {
     setIsExploring(false)
     setIsFinished(false)
     setMazeData([])
+    // 重新生成迷宫
+    handleGenerateMaze()
   }
 
   // 修改原有的 useEffect，只在组件挂载时执行一次
@@ -401,15 +429,32 @@ export const CanvasMaze: React.FC = () => {
     <div className='canvas-maze-container'>
       <Space direction='horizontal' size='middle' style={{ marginBottom: 20 }}>
         <Space>
-            <span>迷宫大小：</span>
-            <Select
+          <span>迷宫大小：</span>
+          <Select
             value={gridSize}
             onChange={handleGridSizeChange}
             disabled={isExploring}
             options={[
+              { value: 5, label: '5 x 5' },
+              { value: 10, label: '10 x 10' },
+              { value: 15, label: '15 x 15' },
+              { value: 20, label: '20 x 20' },
               { value: 25, label: '25 x 25' },
+              { value: 30, label: '30 x 30' },
+              { value: 35, label: '35 x 35' },
+              { value: 40, label: '40 x 40' },
+              { value: 45, label: '45 x 45' },
               { value: 50, label: '50 x 50' },
-              { value: 75, label: '75 x 75' }
+              { value: 55, label: '55 x 55' },
+              { value: 60, label: '60 x 60' },
+              { value: 65, label: '65 x 65' },
+              { value: 70, label: '70 x 70' },
+              { value: 75, label: '75 x 75' },
+              { value: 80, label: '80 x 80' },
+              { value: 85, label: '85 x 85' },
+              { value: 90, label: '90 x 90' },
+              { value: 95, label: '95 x 95' },
+              { value: 100, label: '100 x 100' }
             ]}
             style={{ width: 120 }}
           />
