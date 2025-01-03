@@ -1,39 +1,230 @@
-import Konva from 'konva'
-import { useEffect, useRef } from 'react'
-import './maze.scss'
-import { Button } from 'antd'
+import React, { useEffect, useRef } from 'react';
+import './maze.scss';
 
-export const CanvasMaze = () => {
-  const container = useRef<HTMLDivElement>(null)
+interface Cell {
+  visited: boolean;
+  walls: boolean[];  // [top, right, bottom, left]
+}
+
+export const CanvasMaze: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cols = 50;
+  const rows = 50;
+  const cellSize = 15;
+  const padding = 20;  // 添加内边距用于显示箭头
+
+  const generateMaze = () => {
+    const maze: Cell[][] = Array(rows).fill(null).map(() => 
+      Array(cols).fill(null).map(() => ({
+        visited: false,
+        walls: [true, true, true, true]  // [top, right, bottom, left]
+      }))
+    );
+    
+    const stack: [number, number][] = [];
+    const startCell: [number, number] = [0, 0];
+    
+    const dfs = (row: number, col: number) => {
+      maze[row][col].visited = true;
+      
+      // 如果是出口格子（右下角），确保只有一个方向开放
+      if (row === rows - 1 && col === cols - 1) {
+        // 优先尝试从上方进入
+        if (row > 0 && maze[row-1][col].visited) {
+          maze[row][col].walls[0] = false;  // 打开上墙
+          maze[row-1][col].walls[2] = false;  // 打开上一格的下墙
+          // 确保其他墙壁都是封闭的
+          maze[row][col].walls[1] = true;  // 右
+          maze[row][col].walls[2] = true;  // 下
+          maze[row][col].walls[3] = true;  // 左
+          return;
+        }
+        // 如果上方不行，则从左方进入
+        if (col > 0 && maze[row][col-1].visited) {
+          maze[row][col].walls[3] = false;  // 打开左墙
+          maze[row][col-1].walls[1] = false;  // 打开左边格子的右墙
+          // 确保其他墙壁都是封闭的
+          maze[row][col].walls[0] = true;  // 上
+          maze[row][col].walls[1] = true;  // 右
+          maze[row][col].walls[2] = true;  // 下
+          return;
+        }
+        return;
+      }
+      
+      const directions = [
+        [-1, 0], [0, 1], [1, 0], [0, -1]
+      ];
+      
+      const shuffledDirections = directions
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+      
+      for (const [dy, dx] of shuffledDirections) {
+        const newRow = row + dy;
+        const newCol = col + dx;
+        
+        if (
+          newRow >= 0 && newRow < rows &&
+          newCol >= 0 && newCol < cols &&
+          !maze[newRow][newCol].visited
+        ) {
+          if (dy === -1) {
+            maze[row][col].walls[0] = false;
+            maze[newRow][newCol].walls[2] = false;
+          } else if (dx === 1) {
+            maze[row][col].walls[1] = false;
+            maze[newRow][newCol].walls[3] = false;
+          } else if (dy === 1) {
+            maze[row][col].walls[2] = false;
+            maze[newRow][newCol].walls[0] = false;
+          } else if (dx === -1) {
+            maze[row][col].walls[3] = false;
+            maze[newRow][newCol].walls[1] = false;
+          }
+          
+          dfs(newRow, newCol);
+        }
+      }
+    };
+    
+    dfs(startCell[0], startCell[1]);
+    return maze;
+  };
+
+  const drawMaze = (context: CanvasRenderingContext2D, maze: Cell[][]) => {
+    context.clearRect(0, 0, (cols * cellSize) + padding * 2, (rows * cellSize) + padding * 2);
+    
+    // 移动整个迷宫的起始位置，为箭头留出空间
+    context.translate(padding, padding);
+    
+    // 绘制迷宫主体
+    context.strokeStyle = '#d0d0d0';
+    context.lineWidth = 1;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const cell = maze[row][col];
+        const x = col * cellSize;
+        const y = row * cellSize;
+
+        // 绘制墙壁
+        context.beginPath();
+        if (cell.walls[0]) {
+          context.moveTo(x, y);
+          context.lineTo(x + cellSize, y);
+        }
+        if (cell.walls[1]) {
+          context.moveTo(x + cellSize, y);
+          context.lineTo(x + cellSize, y + cellSize);
+        }
+        if (cell.walls[2]) {
+          context.moveTo(x, y + cellSize);
+          context.lineTo(x + cellSize, y + cellSize);
+        }
+        if (cell.walls[3]) {
+          context.moveTo(x, y);
+          context.lineTo(x, y + cellSize);
+        }
+        context.stroke();
+      }
+    }
+
+    // 确定入口方向
+    const entryCell = maze[0][0];
+    let entryDirection = '';
+    if (!entryCell.walls[2]) entryDirection = 'down';
+    else if (!entryCell.walls[1]) entryDirection = 'right';
+
+    // 确定出口方向
+    const exitCell = maze[rows-1][cols-1];
+    let exitDirection = '';
+    if (!exitCell.walls[0]) exitDirection = 'up';
+    else if (!exitCell.walls[3]) exitDirection = 'left';
+
+    // 绘制入口箭头
+    context.beginPath();
+    context.strokeStyle = '#2E7D32';
+    context.lineWidth = 2;
+    
+    const entryArrowSize = cellSize * 0.8;
+    if (entryDirection === 'down') {
+      // 向下的箭头
+      context.moveTo(cellSize/2, -entryArrowSize/2);
+      context.lineTo(cellSize/2, cellSize/2);
+      // 箭头两翼
+      context.moveTo(cellSize/2, cellSize/2);
+      context.lineTo(cellSize/4, cellSize/4);
+      context.moveTo(cellSize/2, cellSize/2);
+      context.lineTo(cellSize*3/4, cellSize/4);
+    } else {
+      // 向右的箭头
+      context.moveTo(-entryArrowSize/2, cellSize/2);
+      context.lineTo(cellSize/2, cellSize/2);
+      // 箭头两翼
+      context.moveTo(cellSize/2, cellSize/2);
+      context.lineTo(cellSize/4, cellSize/4);
+      context.moveTo(cellSize/2, cellSize/2);
+      context.lineTo(cellSize/4, cellSize*3/4);
+    }
+    context.stroke();
+
+    // 绘制出口箭头
+    context.beginPath();
+    context.strokeStyle = '#C62828';
+    context.lineWidth = 2;
+    
+    const exitX = (cols-1) * cellSize;
+    const exitY = (rows-1) * cellSize;
+    
+    if (exitDirection === 'up') {
+      // 向上的箭头
+      context.moveTo(exitX + cellSize/2, exitY + cellSize/2);
+      context.lineTo(exitX + cellSize/2, exitY + cellSize + entryArrowSize/2);
+      // 箭头两翼
+      context.moveTo(exitX + cellSize/2, exitY + cellSize + entryArrowSize/2);
+      context.lineTo(exitX + cellSize/4, exitY + cellSize + entryArrowSize/4);
+      context.moveTo(exitX + cellSize/2, exitY + cellSize + entryArrowSize/2);
+      context.lineTo(exitX + cellSize*3/4, exitY + cellSize + entryArrowSize/4);
+    } else {
+      // 向左的箭头
+      context.moveTo(exitX + cellSize/2, exitY + cellSize/2);
+      context.lineTo(exitX + cellSize + entryArrowSize/2, exitY + cellSize/2);
+      // 箭头两翼
+      context.moveTo(exitX + cellSize + entryArrowSize/2, exitY + cellSize/2);
+      context.lineTo(exitX + cellSize + entryArrowSize/4, exitY + cellSize/4);
+      context.moveTo(exitX + cellSize + entryArrowSize/2, exitY + cellSize/2);
+      context.lineTo(exitX + cellSize + entryArrowSize/4, exitY + cellSize*3/4);
+    }
+    context.stroke();
+
+    // 重置变换以避免影响后续绘制
+    context.setTransform(1, 0, 0, 1, 0, 0);
+  };
+
   useEffect(() => {
-    const stage = new Konva.Stage({
-      container: 'canvas-maze',
-      width: container.current?.clientWidth || 0,
-      height: container.current?.clientHeight || 0
-    })
-
-    const layer = new Konva.Layer()
-
-    const circle = new Konva.Circle({
-      x: stage.width() / 2,
-      y: stage.height() / 2,
-      radius: 70,
-      fill: 'red',
-      stroke: 'black',
-      strokeWidth: 4
-    })
-
-    layer.add(circle)
-
-    stage.add(layer)
-  })
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    // 增加 canvas 尺寸以容纳箭头
+    canvas.width = cols * cellSize + padding * 2;
+    canvas.height = rows * cellSize + padding * 2;
+    
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    
+    const maze = generateMaze();
+    drawMaze(context, maze);
+  }, []);
 
   return (
-    <>
-      <Button type='primary' style={{ margin: '20px 0', alignSelf: 'center' }}>
-        生成
-      </Button>
-      <div ref={container} id='canvas-maze' className='canvas-maze'></div>
-    </>
-  )
-}
+    <div className="canvas-maze">
+      <canvas
+        ref={canvasRef}
+        width={(cols * cellSize) + padding * 2}
+        height={(rows * cellSize) + padding * 2}
+      />
+    </div>
+  );
+};

@@ -1,5 +1,12 @@
-.canvas-maze{
-    position: absolute;
-    height: 100%;
-    width: 100%;
+.canvas-maze {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+
+  canvas {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
 }
