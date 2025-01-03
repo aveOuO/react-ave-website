@@ -1,10 +1,53 @@
 .canvas-maze-container {
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  
+  width: 100%;
+  max-width: 750px;
+  margin: 0 auto;
+  min-height: 100vh;
+  box-sizing: border-box;
+
   canvas {
-    background-color: #fff;
+    max-width: 100%;
+    height: auto;
+    margin: 10px 0;
+  }
+
+  // 控制面板样式
+  >.ant-space {
+    width: 100%;
+    margin-bottom: 15px;
+    
+    @media screen and (max-width: 576px) {
+      flex-direction: column;
+      align-items: stretch;
+      
+      .ant-space-item {
+        margin-bottom: 10px;
+        width: 100%;
+        
+        // 让所有控制元素在移动端占满宽度
+        .ant-select,
+        .ant-input-number,
+        .ant-btn {
+          width: 100%;
+        }
+        
+        // 调整间距
+        .ant-space {
+          gap: 8px !important;
+        }
+      }
+    }
+  }
+
+  // 标签文字样式
+  span {
+    @media screen and (max-width: 576px) {
+      display: block;
+      margin-bottom: 4px;
+    }
   }
 }

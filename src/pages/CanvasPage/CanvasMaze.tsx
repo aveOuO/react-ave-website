@@ -215,21 +215,23 @@ export const CanvasMaze: React.FC = () => {
   }
 
   const exploreMaze = async (context: CanvasRenderingContext2D, maze: Cell[][]) => {
-    const playerRadius = cellSize * 0.3
     const stack: Position[] = []
     const visited = new Set<string>()
     const currentPos: Position = { row: 0, col: 0 }
 
     const posToString = (pos: Position) => `${pos.row},${pos.col}`
 
-    // 修改 sleep 函数以更好地响应速度变化
-    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, Math.max(1, ms / speed)))
+    // 修改 sleep 函数以设置最小延迟时间
+    const sleep = (ms: number) => new Promise((resolve) => 
+      setTimeout(resolve, Math.max(10, ms / speed)) // 确保最小延迟为10ms
+    )
 
-    // 修改动画函数以使用速度控制
+    // 修改动画函数
     const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
-      // 根据速度调整步数，速度越快步数越少
-      const baseSteps = 8
-      const steps = Math.max(5, Math.floor(baseSteps / speed))
+      // 根据速度调整步数，但保持最小步数
+      const baseSteps = 10
+      const steps = Math.max(3, Math.floor(baseSteps / Math.sqrt(speed))) // 使用平方根来平滑速度变化
+
       const deltaX = ((to.col - from.col) * cellSize) / steps
       const deltaY = ((to.row - from.row) * cellSize) / steps
 
@@ -248,7 +250,10 @@ export const CanvasMaze: React.FC = () => {
         context.beginPath()
         context.strokeStyle = pathColor
         context.lineWidth = 2
-        context.moveTo(padding + from.col * cellSize + cellSize / 2, padding + from.row * cellSize + cellSize / 2)
+        context.moveTo(
+          padding + from.col * cellSize + cellSize / 2,
+          padding + from.row * cellSize + cellSize / 2
+        )
         context.lineTo(
           padding + from.col * cellSize + cellSize / 2 + deltaX * i,
           padding + from.row * cellSize + cellSize / 2 + deltaY * i
@@ -261,14 +266,13 @@ export const CanvasMaze: React.FC = () => {
         context.arc(
           padding + from.col * cellSize + cellSize / 2 + deltaX * i,
           padding + from.row * cellSize + cellSize / 2 + deltaY * i,
-          playerRadius,
+          cellSize * 0.3,
           0,
           Math.PI * 2
         )
         context.fill()
 
-        // 根据速度调整每帧延迟
-        await sleep(5)
+        await sleep(5) // 每帧之间的最小延迟
       }
     }
 
@@ -420,6 +424,45 @@ export const CanvasMaze: React.FC = () => {
     handleGenerateMaze()
   }
 
+  // 修改计算单元格大小的函数
+  const calculateCellSize = (size: number) => {
+    // 获取视口的宽度和高度
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    // 计算可用空间（考虑边距和控制面板的高度）
+    const availableWidth = Math.min(viewportWidth - 40, 750) - padding * 2 // 左右边距20px
+    const availableHeight = viewportHeight - 200 - padding * 2 // 预留控制面板空间
+    
+    // 使用较小的值来确保完整显示
+    const maxCellSize = Math.min(
+      Math.floor(availableWidth / size),
+      Math.floor(availableHeight / size)
+    )
+    
+    return Math.max(10, maxCellSize) // 确保最小单元格大小为10px
+  }
+
+  // 添加窗口大小变化的监听
+  useEffect(() => {
+    const handleResize = () => {
+      const newCellSize = calculateCellSize(gridSize)
+      setCellSize(newCellSize)
+      
+      // 如果迷宫已经存在，重新绘制
+      if (mazeData.length > 0) {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const context = canvas.getContext('2d')
+        if (!context) return
+        drawMaze(context, mazeData)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [gridSize, mazeData])
+
   // 修改原有的 useEffect，只在组件挂载时执行一次
   useEffect(() => {
     handleGenerateMaze()
@@ -435,9 +478,9 @@ export const CanvasMaze: React.FC = () => {
             onChange={handleGridSizeChange}
             disabled={isExploring}
             options={[
-              { value: 5, label: '5 x 5' },
-              { value: 10, label: '10 x 10' },
-              { value: 15, label: '15 x 15' },
+              // { value: 5, label: '5 x 5' },
+              // { value: 10, label: '10 x 10' },
+              // { value: 15, label: '15 x 15' },
               { value: 20, label: '20 x 20' },
               { value: 25, label: '25 x 25' },
               { value: 30, label: '30 x 30' },
