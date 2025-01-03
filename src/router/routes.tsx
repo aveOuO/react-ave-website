@@ -17,6 +17,10 @@ export const routes: RouteObject[] = [
     element: <CanvasMaze />
   },
   {
+    path: '/component-example',
+    element: <ComponentExample />
+  },
+  {
     path: '/',
     element: <App />,
     children: [
