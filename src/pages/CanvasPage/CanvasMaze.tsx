@@ -222,9 +222,14 @@ export const CanvasMaze: React.FC = () => {
 
     const posToString = (pos: Position) => `${pos.row},${pos.col}`
 
-    // 平滑移动动画，增加路径颜色参数
+    // 修改 sleep 函数以更好地响应速度变化
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, Math.max(1, ms / speed)));
+
+    // 修改动画函数以使用速度控制
     const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
-      const steps = 15;
+      // 根据速度调整步数，速度越快步数越少
+      const baseSteps = 15;
+      const steps = Math.max(5, Math.floor(baseSteps / speed));
       const deltaX = (to.col - from.col) * cellSize / steps;
       const deltaY = (to.row - from.row) * cellSize / steps;
 
@@ -265,7 +270,8 @@ export const CanvasMaze: React.FC = () => {
         );
         context.fill();
 
-        await sleep(10);
+        // 根据速度调整每帧延迟
+        await sleep(5);
       }
     };
 
@@ -291,8 +297,6 @@ export const CanvasMaze: React.FC = () => {
       exploredPaths.push({ from, to, color })
       drawExploredPaths()
     }
-
-    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, Math.max(5, ms / speed)));
 
     // 修正获取有效移动方向的函数
     const getValidMoves = (pos: Position): Position[] => {
