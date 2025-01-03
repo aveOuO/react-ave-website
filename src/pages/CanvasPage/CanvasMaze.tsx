@@ -215,7 +215,6 @@ export const CanvasMaze: React.FC = () => {
   }
 
   const exploreMaze = async (context: CanvasRenderingContext2D, maze: Cell[][]) => {
-    const playerRadius = cellSize * 0.3
     const stack: Position[] = []
     const visited = new Set<string>()
     const currentPos: Position = { row: 0, col: 0 }
@@ -424,6 +423,45 @@ export const CanvasMaze: React.FC = () => {
     // 重新生成迷宫
     handleGenerateMaze()
   }
+
+  // 修改计算单元格大小的函数
+  const calculateCellSize = (size: number) => {
+    // 获取视口的宽度和高度
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    
+    // 计算可用空间（考虑边距和控制面板的高度）
+    const availableWidth = Math.min(viewportWidth - 40, 750) - padding * 2 // 左右边距20px
+    const availableHeight = viewportHeight - 200 - padding * 2 // 预留控制面板空间
+    
+    // 使用较小的值来确保完整显示
+    const maxCellSize = Math.min(
+      Math.floor(availableWidth / size),
+      Math.floor(availableHeight / size)
+    )
+    
+    return Math.max(10, maxCellSize) // 确保最小单元格大小为10px
+  }
+
+  // 添加窗口大小变化的监听
+  useEffect(() => {
+    const handleResize = () => {
+      const newCellSize = calculateCellSize(gridSize)
+      setCellSize(newCellSize)
+      
+      // 如果迷宫已经存在，重新绘制
+      if (mazeData.length > 0) {
+        const canvas = canvasRef.current
+        if (!canvas) return
+        const context = canvas.getContext('2d')
+        if (!context) return
+        drawMaze(context, mazeData)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [gridSize, mazeData])
 
   // 修改原有的 useEffect，只在组件挂载时执行一次
   useEffect(() => {
