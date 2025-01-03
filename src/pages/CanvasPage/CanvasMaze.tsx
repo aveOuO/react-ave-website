@@ -228,38 +228,52 @@ export const CanvasMaze: React.FC = () => {
 
       const posToString = (pos: Position) => `${pos.row},${pos.col}`
 
-      // 平滑移动动画
-      const animateMovement = async (from: Position, to: Position) => {
-        const steps = 20 // 动画步数
-        const deltaX = ((to.col - from.col) * cellSize) / steps
-        const deltaY = ((to.row - from.row) * cellSize) / steps
+      // 平滑移动动画，增加路径颜色参数
+      const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
+        const steps = 15;
+        const deltaX = (to.col - from.col) * cellSize / steps;
+        const deltaY = (to.row - from.row) * cellSize / steps;
 
         for (let i = 0; i <= steps; i++) {
           // 清除整个画布上的玩家
-          context.save()
-          context.fillStyle = '#ffffff'
-          context.fillRect(0, 0, canvasRef.current!.width, canvasRef.current!.height)
-          context.restore()
+          context.save();
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+          context.restore();
 
           // 重绘迷宫和已探索的路径
-          drawMaze(context, maze)
-          drawExploredPaths()
+          drawMaze(context, maze);
+          drawExploredPaths();
+
+          // 绘制当前移动中的路径
+          context.beginPath();
+          context.strokeStyle = pathColor;
+          context.lineWidth = 2;
+          context.moveTo(
+            padding + from.col * cellSize + cellSize/2,
+            padding + from.row * cellSize + cellSize/2
+          );
+          context.lineTo(
+            padding + from.col * cellSize + cellSize/2 + deltaX * i,
+            padding + from.row * cellSize + cellSize/2 + deltaY * i
+          );
+          context.stroke();
 
           // 绘制当前位置的玩家
-          context.beginPath()
-          context.fillStyle = '#4CAF50'
+          context.beginPath();
+          context.fillStyle = '#4CAF50';
           context.arc(
-            padding + from.col * cellSize + cellSize / 2 + deltaX * i,
-            padding + from.row * cellSize + cellSize / 2 + deltaY * i,
+            padding + from.col * cellSize + cellSize/2 + deltaX * i,
+            padding + from.row * cellSize + cellSize/2 + deltaY * i,
             playerRadius,
             0,
             Math.PI * 2
-          )
-          context.fill()
+          );
+          context.fill();
 
-          await sleep(10) // 每一小步的延迟
+          await sleep(10);
         }
-      }
+      };
 
       // 存储已探索的路径
       const exploredPaths: { from: Position; to: Position; color: string }[] = []
@@ -322,25 +336,20 @@ export const CanvasMaze: React.FC = () => {
           return true;
         }
 
-        await sleep(100);
-
-        // 使用 getValidMoves 获取可行的移动方向
         const validMoves = getValidMoves(pos);
         
         for (const nextPos of validMoves) {
-          // 绘制探索路径
+          // 前进时使用红色路径
+          await animateMovement(pos, nextPos, '#ff4444');
           drawPath(pos, nextPos, '#ff4444');
-          // 平滑移动到下一个位置
-          await animateMovement(pos, nextPos);
           
           const found = await explore(nextPos);
           if (found) return true;
 
-          // 如果是死路，标记为蓝色
+          // 返回时使用蓝色路径
+          await animateMovement(nextPos, pos, '#4444ff');
+          // 只有在完成返回动画后才绘制最终的蓝色路径
           drawPath(pos, nextPos, '#4444ff');
-          // 平滑移动回上一个位置
-          await animateMovement(nextPos, pos);
-          await sleep(100);
         }
 
         stack.pop();
