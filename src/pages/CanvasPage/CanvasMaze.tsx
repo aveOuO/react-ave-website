@@ -69,9 +69,9 @@ export const CanvasMaze: React.FC = () => {
 
       const directions = [
         [-1, 0], // 上
-        [0, 1],  // 右
-        [1, 0],  // 下
-        [0, -1]  // 左
+        [0, 1], // 右
+        [1, 0], // 下
+        [0, -1] // 左
       ]
 
       const shuffledDirections = directions
@@ -85,13 +85,7 @@ export const CanvasMaze: React.FC = () => {
         const newRow = row + dy
         const newCol = col + dx
 
-        if (
-          newRow >= 0 &&
-          newRow < gridSize &&
-          newCol >= 0 &&
-          newCol < gridSize &&
-          !maze[newRow][newCol].visited
-        ) {
+        if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize && !maze[newRow][newCol].visited) {
           // 打开相应的墙
           if (dy === -1) {
             maze[row][col].walls[0] = false
@@ -247,9 +241,40 @@ export const CanvasMaze: React.FC = () => {
 
     // 修改动画函数
     const animateMovement = async (from: Position, to: Position, pathColor: string = '#ff4444') => {
+      // 验证移动是否合法（是否有墙）
+      const isValidMove = () => {
+        // 检查是否是相邻格子
+        const dx = to.col - from.col
+        const dy = to.row - from.row
+
+        if (Math.abs(dx) + Math.abs(dy) !== 1) return false
+
+        // 检查两个格子之间是否有墙
+        if (dy === -1) {
+          // 向上移动
+          return !maze[from.row][from.col].walls[0] && !maze[to.row][to.col].walls[2]
+        } else if (dx === 1) {
+          // 向右移动
+          return !maze[from.row][from.col].walls[1] && !maze[to.row][to.col].walls[3]
+        } else if (dy === 1) {
+          // 向下移动
+          return !maze[from.row][from.col].walls[2] && !maze[to.row][to.col].walls[0]
+        } else if (dx === -1) {
+          // 向左移动
+          return !maze[from.row][from.col].walls[3] && !maze[to.row][to.col].walls[1]
+        }
+        return false
+      }
+
+      // 验证移动是否合法
+      if (!isValidMove()) {
+        console.warn('Invalid move detected:', from, to)
+        return false
+      }
+
       // 根据速度调整步数，但保持最小步数
       const baseSteps = 10
-      const steps = Math.max(3, Math.floor(baseSteps / Math.sqrt(speed))) // 使用平方根来平滑速度变化
+      const steps = Math.max(3, Math.floor(baseSteps / Math.sqrt(speed)))
 
       const deltaX = ((to.col - from.col) * cellSize) / steps
       const deltaY = ((to.row - from.row) * cellSize) / steps
@@ -290,6 +315,8 @@ export const CanvasMaze: React.FC = () => {
 
         await sleep(5) // 每帧之间的最小延迟
       }
+
+      return true
     }
 
     // 存储已探索的路径
@@ -369,7 +396,7 @@ export const CanvasMaze: React.FC = () => {
       // 检查是否到达终点
       if (pos.row === gridSize - 1 && pos.col === gridSize - 1) {
         visited.add(posToString(pos))
-        return true // 到达终点返回 true
+        return true
       }
 
       visited.add(posToString(pos))
@@ -379,15 +406,17 @@ export const CanvasMaze: React.FC = () => {
 
       for (const nextPos of validMoves) {
         if (!visited.has(posToString(nextPos))) {
-          await animateMovement(pos, nextPos, '#ff4444')
+          const moveSuccess = await animateMovement(pos, nextPos, '#ff4444')
+          if (!moveSuccess) continue
+
           drawPath(pos, nextPos, '#ff4444')
 
           const reachedEnd = await explore(nextPos)
-          if (reachedEnd) return true // 如果到达终点，直接返回，不再回溯
+          if (reachedEnd) return true
 
-          // 只有在没到达终点的情况下才回溯
-          if (!reachedEnd) {
-            await animateMovement(nextPos, pos, '#4444ff')
+          // 只有在移动成功时才进行回溯
+          const backtrackSuccess = await animateMovement(nextPos, pos, '#4444ff')
+          if (backtrackSuccess) {
             drawPath(pos, nextPos, '#4444ff')
           }
         }
