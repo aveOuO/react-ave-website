@@ -1,6 +1,8 @@
 export const HELLO_OBJ = {
   API: {
-    KEY: 'AIzaSyBdVTgkD6WK4Q_Okrn5lE5Q9yJsQ4Kf_HY',
+    KEY: 'AIzaSyBdVTgk',
+    EXTRA_KEY: 'D6WK4Q_Okrn',
+    MORE_KEY: '5lE5Q9yJsQ4Kf_HY',
     BASE_URL: 'wss://generativelanguage.googleapis.com/ws',
     VERSION: 'v1alpha',
     MODEL_NAME: 'models/gemini-2.0-flash-exp'

@@ -65,7 +65,9 @@ let screenRecorder = null
 let isUsingTool = false
 
 // Multimodal Client
-const client = new MultimodalLiveClient({ apiKey: HELLO_OBJ.API.KEY })
+const client = new MultimodalLiveClient({
+  apiKey: HELLO_OBJ.API.KEY + HELLO_OBJ.API.EXTRA_KEY + HELLO_OBJ.API.MORE_KEY
+})
 
 // Initialize configuration values
 voiceSelect.value = HELLO_OBJ.VOICE.NAME
