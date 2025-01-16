@@ -1,0 +1,79 @@
+/* Button styles */
+button {
+  padding: var(--spacing-md);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+/* Input styles */
+input,
+textarea {
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--surface-color);
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5);
+}
+
+/* Log entry styles */
+.log-entry {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.log-entry.system {
+  color: var(--text-secondary);
+}
+
+.log-entry.user {
+  color: var(--text-color);
+  background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.log-entry.ai {
+  color: var(--text-color);
+  background: rgba(var(--secondary-color-rgb), 0.1);
+}
+
+.log-entry .timestamp {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.log-entry .message {
+  flex: 1;
+  word-wrap: break-word;
+}
+
+/* Audio bar styles */
+.audio-bar {
+  height: 10px;
+  background-color: var(--primary-color);
+  border-radius: 5px;
+  transition: width 0.2s ease;
+  width: 0;
+}
+
+.audio-bar.active {
+  background-color: var(--secondary-color);
+}

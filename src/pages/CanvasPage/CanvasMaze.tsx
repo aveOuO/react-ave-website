@@ -14,7 +14,7 @@ interface Position {
   col: number
 }
 
-export const CanvasMaze: React.FC = () => {
+const CanvasMaze: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [gridSize, setGridSize] = useState(50)
   const [speed, setSpeed] = useState(1)
@@ -590,3 +590,5 @@ export const CanvasMaze: React.FC = () => {
     </div>
   )
 }
+
+export default CanvasMaze

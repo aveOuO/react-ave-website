@@ -55,7 +55,7 @@ class ShootingStar {
   }
 }
 
-export const MerryChristmas = () => {
+const MerryChristmas = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const backgroundCanvasRef = useRef<HTMLCanvasElement | null>(null)  // 新增：用于存储静态背景
   const shootingStarsRef = useRef<ShootingStar[]>([])
@@ -370,3 +370,5 @@ export const MerryChristmas = () => {
     </div>
   )
 }
+
+export default MerryChristmas

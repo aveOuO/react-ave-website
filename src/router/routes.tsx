@@ -1,24 +1,32 @@
+import React, { lazy, Suspense } from 'react'
 import { RouteObject } from 'react-router-dom'
-import ClickCounter from '@/components/ClickCounter/ClickCounter'
-import DialogTestPage from '@/pages/DialogTestPage/DialogTestPage'
 import App from '@/App'
-import CanvasPage from '@/pages/CanvasPage/CanvasPage'
-import ComponentExample from '@/pages/ComponentDesignPage/ComponentExample'
-import { CanvasMaze } from '@/pages/CanvasPage/CanvasMaze'
-import { MerryChristmas } from '@/pages/MerryChristmas/MerryChristmas.tsx'
+
+const LazyComponent = (componentImport: () => Promise<any>) => {
+  const Component = lazy(componentImport)
+  return (
+    <Suspense fallback={<div>加载中...</div>}>
+      <Component />
+    </Suspense>
+  )
+}
 
 export const routes: RouteObject[] = [
   {
     path: '/merry-christmas',
-    element: <MerryChristmas />
+    element: LazyComponent(() => import('@/pages/MerryChristmas/MerryChristmas.tsx'))
   },
   {
     path: '/maze',
-    element: <CanvasMaze />
+    element: LazyComponent(() => import('@/pages/CanvasPage/CanvasMaze'))
   },
   {
     path: '/component-example',
-    element: <ComponentExample />
+    element: LazyComponent(() => import('@/pages/ComponentDesignPage/ComponentExample'))
+  },
+  {
+    path: '/gemini-page',
+    element: LazyComponent(() => import('@/pages/GeminiPage/GeminiPage'))
   },
   {
     path: '/',
@@ -28,20 +36,29 @@ export const routes: RouteObject[] = [
         ? [
             {
               path: '/',
-              Component: DialogTestPage
+              element: LazyComponent(() => import('@/pages/DialogTestPage/DialogTestPage'))
             },
             {
               path: '/cps',
-              Component: ClickCounter
+              element: LazyComponent(() => import('@/components/ClickCounter/ClickCounter'))
             },
             {
               path: '/canvas',
               children: [
-                { path: '/canvas/snake', Component: CanvasPage },
-                { path: '/canvas/maze', Component: CanvasMaze }
+                {
+                  path: '/canvas/snake',
+                  element: LazyComponent(() => import('@/pages/CanvasPage/CanvasPage'))
+                },
+                {
+                  path: '/canvas/maze',
+                  element: LazyComponent(() => import('@/pages/CanvasPage/CanvasMaze'))
+                }
               ]
             },
-            { path: '/component-example', Component: ComponentExample }
+            {
+              path: '/component-example',
+              element: LazyComponent(() => import('@/pages/ComponentDesignPage/ComponentExample'))
+            }
           ]
         : [])
     ]

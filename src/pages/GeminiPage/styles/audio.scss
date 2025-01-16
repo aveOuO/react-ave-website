@@ -1,0 +1,26 @@
+.audio-visualizers {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.visualizer-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  flex: 1;
+}
+
+.visualizer-container label {
+  font-weight: bold;
+}
+
+#input-audio-visualizer,
+#audio-visualizer {
+  height: 20px;
+  background-color: var(--border-color);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
