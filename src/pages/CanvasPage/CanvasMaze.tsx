@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Select, InputNumber, Space } from 'antd'
 import './maze.scss'
+import { useDevMode } from '@/hooks/useDevMode'
+import lodashEs from '@/utils/lodash-es'
 
 interface Cell {
   visited: boolean
@@ -12,7 +14,7 @@ interface Position {
   col: number
 }
 
-export const CanvasMaze: React.FC = () => {
+const CanvasMaze: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [gridSize, setGridSize] = useState(50)
   const [speed, setSpeed] = useState(1)
@@ -21,6 +23,7 @@ export const CanvasMaze: React.FC = () => {
   const [isFinished, setIsFinished] = useState(false)
   const [mazeData, setMazeData] = useState<Cell[][]>([])
   const padding = 20 // 添加内边距用于显示箭头
+  const isDevMode = useDevMode()
 
   const generateMaze = () => {
     const maze: Cell[][] = Array(gridSize)
@@ -440,12 +443,17 @@ export const CanvasMaze: React.FC = () => {
   // 生成新迷宫
   const handleGenerateMaze = () => {
     const maze = generateMaze()
+    // 在开发者模式下输出迷宫数组
+    if (isDevMode) {
+      console.log('迷宫数组:', lodashEs.cloneDeep(maze))
+    }
     setMazeData(maze)
     const canvas = canvasRef.current
     if (!canvas) return
     const context = canvas.getContext('2d')
     if (!context) return
     drawMaze(context, maze)
+    setIsFinished(false)
   }
 
   // 开始探索
@@ -520,9 +528,14 @@ export const CanvasMaze: React.FC = () => {
             onChange={handleGridSizeChange}
             disabled={isExploring}
             options={[
-              // { value: 5, label: '5 x 5' },
-              // { value: 10, label: '10 x 10' },
-              // { value: 15, label: '15 x 15' },
+              // 开发者模式下显示额外选项
+              ...(isDevMode
+                ? [
+                    { value: 5, label: '5 x 5' },
+                    { value: 10, label: '10 x 10' },
+                    { value: 15, label: '15 x 15' }
+                  ]
+                : []),
               { value: 20, label: '20 x 20' },
               { value: 25, label: '25 x 25' },
               { value: 30, label: '30 x 30' },
@@ -541,7 +554,7 @@ export const CanvasMaze: React.FC = () => {
               { value: 95, label: '95 x 95' },
               { value: 100, label: '100 x 100' }
             ]}
-            style={{ width: 120 }}
+            style={{ width: 150 }}
           />
           <Button type='primary' onClick={handleGenerateMaze} disabled={isExploring}>
             生成迷宫
@@ -577,3 +590,5 @@ export const CanvasMaze: React.FC = () => {
     </div>
   )
 }
+
+export default CanvasMaze
