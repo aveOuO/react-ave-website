@@ -45,11 +45,15 @@ export class VideoRecorder {
             this.previewElement = previewElement;
             this.onVideoData = onVideoData;
 
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const facingMode = isMobile ? { facingMode: 'environment' } : { facingMode: 'user' };
+
             // Request camera access
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
+            this.stream = await navigator.mediaDevices.getUserMedia({
                 video: {
+                    ...facingMode,
                     width: { ideal: this.options.width },
-                    height: { ideal: this.options.height }
+                    height: { ideal: this.options.height },
                 }
             });
 
