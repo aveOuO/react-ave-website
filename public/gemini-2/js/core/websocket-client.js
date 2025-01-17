@@ -59,11 +59,12 @@ export class MultimodalLiveClient extends EventEmitter {
    * @throws {ApplicationError} - Throws an error if the connection fails.
    */
   connect(config) {
-    if (config.apiKey) {
+    const { apiKey, ...otherConfig } = config
+    if (apiKey) {
       this.url = `wss://wsgemini.vvangxuanan.top/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${config.apiKey}`
     }
     this.config = {
-      ...config,
+      ...otherConfig,
       tools: [...this.toolManager.getToolDeclarations(), ...(config.tools || [])]
     }
     const ws = new WebSocket(this.url)

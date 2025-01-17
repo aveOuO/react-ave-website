@@ -38,6 +38,8 @@ const configContainer = document.getElementById('config-container')
 const apiKeyInput = document.getElementById('api-key-input')
 const getApiKey = document.getElementById('get-api-key')
 
+let apiKey = ''
+
 // Theme switcher
 const themeToggle = document.getElementById('theme-toggle')
 const root = document.documentElement
@@ -396,11 +398,11 @@ async function resumeAudioContext() {
  * Connects to the WebSocket server.
  * @returns {Promise<void>}
  */
+// 建立连接
 async function connectToWebsocket() {
-  debugger
   const config = {
     model: CONFIG.API.MODEL_NAME,
-    apiKey: apiKeyInput.value,
+    apiKey: apiKey || apiKeyInput?.value,
     generationConfig: {
       responseModalities: 'audio',
       speechConfig: {
@@ -423,7 +425,7 @@ async function connectToWebsocket() {
   try {
     await client.connect(config)
     isConnected = true
-    connectButton.textContent = 'Disconnect'
+    connectButton.textContent = '断开连接'
     connectButton.classList.add('connected')
     messageInput.disabled = false
     sendButton.disabled = false
@@ -714,7 +716,7 @@ screenButton.disabled = true
 getApiKey.addEventListener('click', () => {
   // 从后端请求获取apikey
   const pwd = apiKeyInput.value
-  fetch('https://api.vvangxuanan.top/api/getKey', {
+  fetch('http://localhost:8080/api/key/getKey', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -723,6 +725,16 @@ getApiKey.addEventListener('click', () => {
   })
     .then((response) => response.json())
     .then((data) => {
-      console.log(data)
+      if (data.success) {
+        apiKey = data.data.apiKey
+        apiKeyInput.value = apiKey
+        getApiKey.parentElement.remove()
+        alert('apiKey已获取可以建立连接了')
+      } else {
+        alert(data.message)
+      }
+    })
+    .catch((error) => {
+      alert(error)
     })
 })
