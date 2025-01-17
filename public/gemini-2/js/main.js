@@ -1,7 +1,7 @@
 import { MultimodalLiveClient } from './core/websocket-client.js'
 import { AudioStreamer } from './audio/audio-streamer.js'
 import { AudioRecorder } from './audio/audio-recorder.js'
-import { HELLO_OBJ } from './config/hello.js'
+import { CONFIG } from './config/config.js'
 import { Logger } from './utils/logger.js'
 import { VideoManager } from './video/video-manager.js'
 import { ScreenRecorder } from './video/screen-recorder.js'
@@ -35,6 +35,8 @@ const configToggle = document.getElementById('config-toggle')
 const toggleLogs = document.getElementById('toggle-logs')
 const logsWrapper = document.querySelector('.logs-wrapper')
 const configContainer = document.getElementById('config-container')
+const apiKeyInput = document.getElementById('api-key-input')
+const getApiKey = document.getElementById('get-api-key')
 
 // Theme switcher
 const themeToggle = document.getElementById('theme-toggle')
@@ -66,13 +68,13 @@ let isUsingTool = false
 
 // Multimodal Client
 const client = new MultimodalLiveClient({
-  apiKey: HELLO_OBJ.API.KEY + HELLO_OBJ.API.EXTRA_KEY + HELLO_OBJ.API.MORE_KEY
+  apiKey: CONFIG.API.KEY
 })
 
 // Initialize configuration values
-voiceSelect.value = HELLO_OBJ.VOICE.NAME
-sampleRateInput.value = HELLO_OBJ.AUDIO.OUTPUT_SAMPLE_RATE
-systemInstructionInput.value = HELLO_OBJ.SYSTEM_INSTRUCTION.TEXT
+voiceSelect.value = CONFIG.VOICE.NAME
+sampleRateInput.value = CONFIG.AUDIO.OUTPUT_SAMPLE_RATE
+systemInstructionInput.value = CONFIG.SYSTEM_INSTRUCTION.TEXT
 
 // Configuration presets
 const CONFIG_PRESETS = {
@@ -111,9 +113,9 @@ async function updateConfiguration() {
   }
 
   // Update configuration
-  HELLO_OBJ.VOICE.NAME = newVoice
-  HELLO_OBJ.AUDIO.OUTPUT_SAMPLE_RATE = newSampleRate
-  HELLO_OBJ.SYSTEM_INSTRUCTION.TEXT = newInstruction
+  CONFIG.VOICE.NAME = newVoice
+  CONFIG.AUDIO.OUTPUT_SAMPLE_RATE = newSampleRate
+  CONFIG.SYSTEM_INSTRUCTION.TEXT = newInstruction
 
   // Save to localStorage
   localStorage.setItem('gemini_voice', newVoice)
@@ -144,18 +146,18 @@ async function updateConfiguration() {
 
 // Load saved configuration if exists
 if (localStorage.getItem('gemini_voice')) {
-  HELLO_OBJ.VOICE.NAME = localStorage.getItem('gemini_voice')
-  voiceSelect.value = HELLO_OBJ.VOICE.NAME
+  CONFIG.VOICE.NAME = localStorage.getItem('gemini_voice')
+  voiceSelect.value = CONFIG.VOICE.NAME
 }
 
 if (localStorage.getItem('gemini_output_sample_rate')) {
-  HELLO_OBJ.AUDIO.OUTPUT_SAMPLE_RATE = parseInt(localStorage.getItem('gemini_output_sample_rate'))
-  sampleRateInput.value = HELLO_OBJ.AUDIO.OUTPUT_SAMPLE_RATE
+  CONFIG.AUDIO.OUTPUT_SAMPLE_RATE = parseInt(localStorage.getItem('gemini_output_sample_rate'))
+  sampleRateInput.value = CONFIG.AUDIO.OUTPUT_SAMPLE_RATE
 }
 
 if (localStorage.getItem('gemini_system_instruction')) {
-  HELLO_OBJ.SYSTEM_INSTRUCTION.TEXT = localStorage.getItem('gemini_system_instruction')
-  systemInstructionInput.value = HELLO_OBJ.SYSTEM_INSTRUCTION.TEXT
+  CONFIG.SYSTEM_INSTRUCTION.TEXT = localStorage.getItem('gemini_system_instruction')
+  systemInstructionInput.value = CONFIG.SYSTEM_INSTRUCTION.TEXT
 }
 
 // Add event listener for configuration changes
@@ -311,7 +313,7 @@ async function ensureAudioInitialized() {
   }
   if (!audioStreamer) {
     audioStreamer = new AudioStreamer(audioCtx)
-    audioStreamer.sampleRate = HELLO_OBJ.AUDIO.OUTPUT_SAMPLE_RATE
+    audioStreamer.sampleRate = CONFIG.AUDIO.OUTPUT_SAMPLE_RATE
     await audioStreamer.initialize()
   }
   return audioStreamer
@@ -395,14 +397,16 @@ async function resumeAudioContext() {
  * @returns {Promise<void>}
  */
 async function connectToWebsocket() {
+  debugger
   const config = {
-    model: HELLO_OBJ.API.MODEL_NAME,
+    model: CONFIG.API.MODEL_NAME,
+    apiKey: apiKeyInput.value,
     generationConfig: {
       responseModalities: 'audio',
       speechConfig: {
         voiceConfig: {
           prebuiltVoiceConfig: {
-            voiceName: HELLO_OBJ.VOICE.NAME // You can change voice in the config.js file
+            voiceName: CONFIG.VOICE.NAME // You can change voice in the config.js file
           }
         }
       }
@@ -410,7 +414,7 @@ async function connectToWebsocket() {
     systemInstruction: {
       parts: [
         {
-          text: HELLO_OBJ.SYSTEM_INSTRUCTION.TEXT // You can change system instruction in the config.js file
+          text: CONFIG.SYSTEM_INSTRUCTION.TEXT // You can change system instruction in the config.js file
         }
       ]
     }
@@ -444,7 +448,7 @@ async function connectToWebsocket() {
     Logger.error('Connection error:', error)
     logMessage(`Connection error: ${errorMessage}`, 'system')
     isConnected = false
-    connectButton.textContent = 'Connect'
+    connectButton.textContent = '建立连接'
     connectButton.classList.remove('connected')
     messageInput.disabled = true
     sendButton.disabled = true
@@ -469,7 +473,7 @@ function disconnectFromWebsocket() {
     isRecording = false
     updateMicIcon()
   }
-  connectButton.textContent = 'Connect'
+  connectButton.textContent = '建立连接'
   connectButton.classList.remove('connected')
   messageInput.disabled = true
   sendButton.disabled = true
@@ -590,7 +594,7 @@ connectButton.addEventListener('click', () => {
 messageInput.disabled = true
 sendButton.disabled = true
 micButton.disabled = true
-connectButton.textContent = 'Connect'
+connectButton.textContent = '建立连接'
 
 /**
  * Handles the video toggle. Starts or stops video streaming.
@@ -706,3 +710,19 @@ function stopScreenSharing() {
 
 screenButton.addEventListener('click', handleScreenShare)
 screenButton.disabled = true
+
+getApiKey.addEventListener('click', () => {
+  // 从后端请求获取apikey
+  const pwd = apiKeyInput.value
+  fetch('https://api.vvangxuanan.top/api/getKey', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ pwd })
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data)
+    })
+})
