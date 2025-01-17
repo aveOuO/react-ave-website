@@ -716,7 +716,7 @@ screenButton.disabled = true
 getApiKey.addEventListener('click', () => {
   // 从后端请求获取apikey
   const pwd = apiKeyInput.value
-  fetch('http://api.vvangxuanan.top/api/key/getKey', {
+  fetch('https://api.vvangxuanan.top/api/key/getKey', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
