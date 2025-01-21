@@ -8,6 +8,7 @@ $max-table-list-width: 800px;
   height: 32px;
   position: absolute;
   top: 100%;
+  left: 0;
 }
 
 .chat-title {
@@ -16,8 +17,11 @@ $max-table-list-width: 800px;
 
 .chat-table-list {
   max-width: $max-table-list-width;
+  flex-grow: 1;
 }
 
 .chat-box {
+  width: 100%;
   max-width: $max-table-list-width;
+  margin: 0 auto;
 }

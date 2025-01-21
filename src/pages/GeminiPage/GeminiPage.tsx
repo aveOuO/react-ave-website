@@ -1,14 +1,48 @@
-import React, { useState } from 'react'
-import { ConfigProvider, Layout, theme } from 'antd'
+import React, { useCallback, useRef, useState } from 'react'
+import { Button, ConfigProvider, Input, Layout, theme } from 'antd'
 import { RightCircleFilled } from '@ant-design/icons'
 import 'highlight.js/styles/default.css'
 import hljs from 'highlight.js'
 import clsx from 'clsx'
 import './styles/page.scss'
+import { TextAreaRef } from 'antd/es/input/TextArea'
 
 const GeminiPage: React.FC = () => {
   const [_theme, setTheme] = useState<'dark' | 'light'>('light')
+  const textareaRef = useRef<TextAreaRef>(null)
   const [collapsed, setCollapsed] = useState(false)
+  const [value, setValue] = useState('')
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter') {
+        if (!event.shiftKey && !event.ctrlKey) {
+          event.preventDefault()
+          // 在这里可以添加发送消息的逻辑
+          console.log('发送消息')
+          return
+        }
+
+        if (event.ctrlKey) {
+          const { selectionStart, selectionEnd } = event.currentTarget
+          const before = value.substring(0, selectionStart)
+          const after = value.substring(selectionEnd)
+          setValue(`${before}\n${after}`)
+          setTimeout(() => {
+            if (textareaRef.current) {
+              const textarea = textareaRef.current.resizableTextArea?.textArea
+              if (textarea) {
+                textarea.selectionStart = selectionStart + 1
+                textarea.selectionEnd = selectionStart + 1
+              }
+            }
+          })
+          return
+        }
+      }
+    },
+    [value]
+  )
 
   return (
     <ConfigProvider
@@ -22,7 +56,7 @@ const GeminiPage: React.FC = () => {
           collapsed={collapsed}
           className='relative'
           style={{ background: '#F9FBFF', borderRight: '1px solid #ddd' }}>
-          <div className='cursor-pointer absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2'>
+          <div className='cursor-pointer absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 z-50'>
             <RightCircleFilled
               className={clsx(
                 'text-[30px]',
@@ -51,60 +85,21 @@ const GeminiPage: React.FC = () => {
                   <div className='chat-table-list w-full mx-auto py-[40px]'>
                     <div>内容</div>
                     <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
-                    <div>内容</div>
                   </div>
-                  <div className='chat-box flex-shrink-0 sticky bottom-0 mt-auto'>聊天框</div>
+                  <div className='chat-box flex-shrink-0 sticky bottom-0 mt-auto pb-[10px]'>
+                    <div className='relative'>
+                      <Input.TextArea
+                        ref={textareaRef}
+                        value={value}
+                        onChange={(e) => setValue(e.target.value)}
+                        autoSize={{ minRows: 2, maxRows: 6 }}
+                        style={{ resize: 'none', paddingRight: '100px' }}
+                        onKeyDown={handleKeyDown}></Input.TextArea>
+                      <Button className='absolute right-[20px] bottom-[10px]' type='primary'>
+                        发送
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
