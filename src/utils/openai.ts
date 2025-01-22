@@ -10,6 +10,7 @@ export const initOpenAI = async (apiKey?: string) => {
   }
   return new OpenAI({
     apiKey,
-    baseURL: 'https://gemini.vvangxuanan.top/v1'
+    baseURL: 'https://gemini.vvangxuanan.top/v1',
+    dangerouslyAllowBrowser: true
   })
 }

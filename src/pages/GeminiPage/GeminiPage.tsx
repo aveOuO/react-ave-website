@@ -6,12 +6,46 @@ import hljs from 'highlight.js'
 import clsx from 'clsx'
 import './styles/page.scss'
 import { TextAreaRef } from 'antd/es/input/TextArea'
+import { initOpenAI } from '@/utils/openai'
+import OpenAI from 'openai'
 
 const GeminiPage: React.FC = () => {
+  // 主题色切换
   const [_theme, setTheme] = useState<'dark' | 'light'>('light')
-  const textareaRef = useRef<TextAreaRef>(null)
+  // 侧边栏折叠
   const [collapsed, setCollapsed] = useState(false)
+  // 聊天框输入
+  const textareaRef = useRef<TextAreaRef>(null)
   const [value, setValue] = useState('')
+  const [submiting, setSubmiting] = useState(false)
+
+  const openAi = useRef<OpenAI>()
+
+  const onSubmit = async () => {
+    if (submiting) return
+    if (!openAi.current) {
+      openAi.current = await initOpenAI()
+    }
+    const openai = openAi.current
+
+    setSubmiting(true)
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gemini-2.0-flash-exp',
+        messages: [
+          { role: 'developer', content: 'You are a helpful assistant.' },
+          {
+            role: 'user',
+            content: '你好'
+          }
+        ]
+      })
+
+      console.log(completion)
+    } finally {
+      setSubmiting(false)
+    }
+  }
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -95,7 +129,12 @@ const GeminiPage: React.FC = () => {
                         autoSize={{ minRows: 2, maxRows: 6 }}
                         style={{ resize: 'none', paddingRight: '100px' }}
                         onKeyDown={handleKeyDown}></Input.TextArea>
-                      <Button className='absolute right-[20px] bottom-[10px]' type='primary'>
+                      <Button
+                        className='absolute right-[20px] bottom-[10px]'
+                        disabled={!value.length}
+                        loading={submiting}
+                        type='primary'
+                        onClick={onSubmit}>
                         发送
                       </Button>
                     </div>
